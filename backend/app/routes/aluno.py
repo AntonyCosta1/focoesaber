@@ -13,8 +13,18 @@ def criar_aluno(data: CriarAluno, db: Session = Depends(get_db)):
     responsavel = db.query(User).filter(User.id_usuario == data.id_responsavel).first()
     if not responsavel:
         raise HTTPException(status_code=404, detail="Responsável não encontrado")
+    
+    escola = db.query(Escola).filter(Escola.id_escola == data.id_escola).first()
+    if not escola:
+        raise HTTPException(status_code=404, detail="Escola não encontrada")
 
-    aluno = Aluno(**data.dict())
+    aluno = Aluno(
+        nome = data.nome,
+        data_nascimento = data.data_nascimento,
+        matricula = data.matricula,
+        id_escola = data.id_escola,
+        id_responsavel = data.id_responsavel
+    )
 
     db.add(aluno)
     db.commit()
