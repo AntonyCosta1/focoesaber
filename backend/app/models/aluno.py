@@ -10,6 +10,6 @@ class Aluno(Base):
     matricula = Column(String(30), unique=True, nullable=False)
     matriculado_ativo = Column(Boolean, default=True)
     id_escola = Column(Integer, ForeignKey("escolas.id_escola"), nullable=False)
-    id_professor = Column(Integer, ForeignKey("usuarios.id_usuario"), nullable=False)
+    id_responsavel = Column(Integer, ForeignKey("usuarios.id_usuario"), nullable=False)
     
 
