@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from app.database import engine, Base
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.models.aluno import Aluno
 from app.models.escola import Escola
@@ -26,6 +27,17 @@ from app.routes.relatorios import router as relatorios_router
 
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.1:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(user_router)
 app.include_router(auth_router)
 app.include_router(escola_router)
@@ -37,6 +49,7 @@ app.include_router(frequencia_router)
 app.include_router(desempenho_router)
 app.include_router(progresso_router)
 app.include_router(relatorios_router)
+
 
 Base.metadata.create_all(bind=engine)
 
