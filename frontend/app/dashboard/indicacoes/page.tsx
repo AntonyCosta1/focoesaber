@@ -12,10 +12,21 @@ type Indicacao = {
   observacao?: string;
 };
 
+type Usuario = {
+  id_usuario: number;
+  nome: string;
+  tipo_usuario: string;
+};
+
 export default function IndicacoesPage() {
   const [indicacoes, setIndicacoes] = useState<Indicacao[]>([]);
   const [loading, setLoading] = useState(true);
+
   const [idResponsavel, setIdResponsavel] = useState("");
+  const [nomeResponsavel, setNomeResponsavel] = useState("");
+  const [responsaveis, setResponsaveis] = useState<Usuario[]>([]);
+  const [buscandoResponsavel, setBuscandoResponsavel] = useState(false);
+
   const router = useRouter();
 
   async function carregarIndicacoes() {
@@ -34,23 +45,60 @@ export default function IndicacoesPage() {
     carregarIndicacoes();
   }, []);
 
+  async function buscarResponsavelPorNome(nome: string) {
+    if (!nome.trim()) {
+      setResponsaveis([]);
+      setIdResponsavel("");
+      return;
+    }
+
+    setBuscandoResponsavel(true);
+
+    try {
+      const response = await fetch(
+        `https://focoesaber.onrender.com/usuarios/buscar/${encodeURIComponent(nome)}`
+      );
+
+      if (!response.ok) {
+        setResponsaveis([]);
+        return;
+      }
+
+      const data = await response.json();
+
+      const somenteResponsaveis = data.filter(
+        (usuario: Usuario) => usuario.tipo_usuario === "responsavel"
+      );
+
+      setResponsaveis(somenteResponsaveis);
+    } catch (error) {
+      console.error("Erro ao buscar responsável:", error);
+      setResponsaveis([]);
+    } finally {
+      setBuscandoResponsavel(false);
+    }
+  }
+
   async function aprovarIndicacao(id_indicacao: number) {
     if (!idResponsavel) {
-      alert("Informe o ID do responsável para aprovar a indicação.");
+      alert("Selecione um responsável pelo nome antes de aprovar a indicação.");
       return;
     }
 
     try {
-      const response = await fetch(`https://focoesaber.onrender.com/indicacoes/${id_indicacao}/aprovar/`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id_responsavel: idResponsavel,
-          observacao: "Aprovado pelo responsável"
-        }),
-      });
+      const response = await fetch(
+        `https://focoesaber.onrender.com/indicacoes/${id_indicacao}/aprovar/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id_responsavel: Number(idResponsavel),
+            observacao: "Aprovado pelo responsável",
+          }),
+        }
+      );
 
       const data = await response.json();
 
@@ -69,21 +117,24 @@ export default function IndicacoesPage() {
 
   async function recusarIndicacao(id_indicacao: number) {
     if (!idResponsavel) {
-      alert("Informe o ID do responsável para recusar a indicação.");
+      alert("Selecione um responsável pelo nome antes de recusar a indicação.");
       return;
     }
 
     try {
-      const response = await fetch(`https://focoesaber.onrender.com/indicacoes/${id_indicacao}/recusar/`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id_responsavel: idResponsavel,
-          observacao: "Recusado pelo responsável"
-        }),
-      });
+      const response = await fetch(
+        `https://focoesaber.onrender.com/indicacoes/${id_indicacao}/recusar/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id_responsavel: Number(idResponsavel),
+            observacao: "Recusado pelo responsável",
+          }),
+        }
+      );
 
       const data = await response.json();
 
@@ -121,7 +172,7 @@ export default function IndicacoesPage() {
 
           <button
             onClick={() => router.push("/dashboard/indicacoes/nova")}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-500 px-5 py-3 font-medium text-white shadow-sm hover:bg-green-600 transition"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-500 px-5 py-3 font-medium text-white shadow-sm transition hover:bg-green-600"
           >
             <Plus size={18} />
             Nova indicação
@@ -130,18 +181,63 @@ export default function IndicacoesPage() {
 
         <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <label className="mb-2 block text-sm font-medium text-slate-700">
-            ID do responsável para aprovar/recusar
+            Buscar responsável pelo nome
           </label>
+
           <input
-            type="number"
-            value={idResponsavel}
-            onChange={(e) => setIdResponsavel(e.target.value)}
-            placeholder="Digite o ID do responsável"
+            type="text"
+            value={nomeResponsavel}
+            onChange={(e) => {
+              const valor = e.target.value;
+              setNomeResponsavel(valor);
+              setIdResponsavel("");
+              buscarResponsavelPorNome(valor);
+            }}
+            placeholder="Digite o nome do responsável"
             className="max-w-sm w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-green-500"
           />
+
+          {buscandoResponsavel && (
+            <p className="mt-2 text-sm text-slate-500">Buscando responsável...</p>
+          )}
+
+          {!buscandoResponsavel &&
+            nomeResponsavel.trim() !== "" &&
+            responsaveis.length > 0 && (
+              <div className="mt-3 max-w-sm overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                {responsaveis.map((responsavel) => (
+                  <button
+                    key={responsavel.id_usuario}
+                    type="button"
+                    onClick={() => {
+                      setIdResponsavel(String(responsavel.id_usuario));
+                      setNomeResponsavel(responsavel.nome);
+                      setResponsaveis([]);
+                    }}
+                    className="block w-full border-b border-slate-100 px-4 py-3 text-left last:border-b-0 hover:bg-slate-50"
+                  >
+                    {responsavel.nome}
+                  </button>
+                ))}
+              </div>
+            )}
+
+          {!buscandoResponsavel &&
+            nomeResponsavel.trim() !== "" &&
+            responsaveis.length === 0 && (
+              <p className="mt-2 text-sm text-red-500">
+                Nenhum responsável encontrado.
+              </p>
+            )}
+
+          {idResponsavel && (
+            <p className="mt-2 text-sm text-green-600">
+              Responsável selecionado: {nomeResponsavel} (ID: {idResponsavel})
+            </p>
+          )}
         </section>
 
-        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           {loading ? (
             <div className="p-6">
               <p className="text-slate-600">Carregando indicações...</p>
@@ -172,26 +268,25 @@ export default function IndicacoesPage() {
                       <td className="px-6 py-4">{indicacao.id_professor}</td>
                       <td className="px-6 py-4">
                         <span
-                          className={`rounded-full px-3 py-1 text-xs font-medium ${indicacao.status_aprovacao === "aprovado"
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${
+                            indicacao.status_aprovacao === "aprovado"
                               ? "bg-green-100 text-green-700"
                               : indicacao.status_aprovacao === "recusado"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-yellow-100 text-yellow-700"
-                            }`}
+                              ? "bg-red-100 text-red-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
                         >
                           {indicacao.status_aprovacao}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        {indicacao.observacao || "-"}
-                      </td>
+                      <td className="px-6 py-4">{indicacao.observacao || "-"}</td>
                       <td className="px-6 py-4">
                         <div className="flex flex-wrap gap-2">
                           {indicacao.status_aprovacao === "pendente" && (
                             <>
                               <button
                                 onClick={() => aprovarIndicacao(indicacao.id_indicacao)}
-                                className="inline-flex items-center gap-2 rounded-lg bg-green-500 px-3 py-2 text-xs font-medium text-white hover:bg-green-600 transition"
+                                className="inline-flex items-center gap-2 rounded-lg bg-green-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-green-600"
                               >
                                 <CheckCircle2 size={14} />
                                 Aprovar
@@ -199,7 +294,7 @@ export default function IndicacoesPage() {
 
                               <button
                                 onClick={() => recusarIndicacao(indicacao.id_indicacao)}
-                                className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-3 py-2 text-xs font-medium text-white hover:bg-red-600 transition"
+                                className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-red-600"
                               >
                                 <XCircle size={14} />
                                 Recusar
@@ -212,7 +307,7 @@ export default function IndicacoesPage() {
                               onClick={() =>
                                 router.push(`/dashboard/inscricoes/${indicacao.id_indicacao}`)
                               }
-                              className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-3 py-2 text-xs font-medium text-white hover:bg-blue-600 transition"
+                              className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-blue-600"
                             >
                               Finalizar inscrição
                             </button>
@@ -221,7 +316,8 @@ export default function IndicacoesPage() {
                           {indicacao.status_aprovacao === "recusado" && (
                             <span className="text-slate-500">Sem ações</span>
                           )}
-                        </div></td>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
