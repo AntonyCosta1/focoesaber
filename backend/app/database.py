@@ -5,7 +5,7 @@ import os
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = "postgresql://focoesaber_user:If34DUtu4sLI2xOHrdSNPk3j22V1T5B1@dpg-d7duuvhf9bms738dhc70-a.oregon-postgres.render.com/focoesaber"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
