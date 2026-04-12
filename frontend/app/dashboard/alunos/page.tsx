@@ -72,6 +72,13 @@ export default function AlunosPage() {
             <Plus size={18} />
             Novo aluno
           </button>
+
+          <button
+            onClick={() => router.push(`/dashboard/alunos/${idAluno}/registrar`)}
+            className="mt-4 rounded-xl bg-green-500 px-4 py-3 text-sm font-medium text-white hover:bg-green-600 transition"
+          >
+            Registrar progresso
+          </button>
         </header>
 
         <section className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">

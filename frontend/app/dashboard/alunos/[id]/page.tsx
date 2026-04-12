@@ -84,6 +84,12 @@ export default function ProgressoAlunoPage() {
                         <ArrowLeft size={16} />
                         Voltar para alunos
                     </button>
+                    <button
+                        onClick={() => router.push(`/dashboard/alunos/${idAluno}/registrar`)}
+                        className="mt-4 rounded-xl bg-green-500 px-4 py-3 text-sm font-medium text-white hover:bg-green-600 transition"
+                    >
+                        Registrar progresso
+                    </button>
 
                     <h1 className="text-3xl font-bold tracking-tight">Progresso do aluno</h1>
                     <p className="mt-1 text-slate-600">
@@ -168,8 +174,8 @@ export default function ProgressoAlunoPage() {
                                                     <td className="px-6 py-4">
                                                         <span
                                                             className={`rounded-full px-3 py-1 text-xs font-medium ${frequencia.presente
-                                                                    ? "bg-green-100 text-green-700"
-                                                                    : "bg-red-100 text-red-700"
+                                                                ? "bg-green-100 text-green-700"
+                                                                : "bg-red-100 text-red-700"
                                                                 }`}
                                                         >
                                                             {frequencia.presente ? "Presente" : "Falta"}
@@ -200,8 +206,8 @@ export default function ProgressoAlunoPage() {
                                                 <h4 className="font-semibold">{desempenho.descricao}</h4>
                                                 <span
                                                     className={`rounded-full px-3 py-1 text-xs font-medium ${desempenho.validado
-                                                            ? "bg-green-100 text-green-700"
-                                                            : "bg-yellow-100 text-yellow-700"
+                                                        ? "bg-green-100 text-green-700"
+                                                        : "bg-yellow-100 text-yellow-700"
                                                         }`}
                                                 >
                                                     {desempenho.validado ? "Validado" : "Pendente"}
