@@ -85,7 +85,7 @@ export default function DashboardPage() {
       titulo: "Cadastrar aluno",
       descricao: "Inicie um novo cadastro no projeto.",
       icone: <UserPlus size={22} />,
-      rota: "/dashboard/alunos/novo",
+      rota: "/dashboard/alunos/novo_aluno",
     },
     {
       titulo: "Pesquisar aluno",

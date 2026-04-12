@@ -31,3 +31,12 @@ def criar_usuario(usuario: CriarUsuario, db: Session = Depends(get_db)):
 def listar_usuarios(db: Session = Depends(get_db)):
     usuarios = db.query(User).all()
     return usuarios
+
+@router.get("/buscar/{nome}")
+def buscar_usuario_por_nome(nome: str, db: Session = Depends(get_db)):
+    usuarios = db.query(User).filter(User.nome.ilike(f"%{nome}%")).all()
+
+    if not usuarios:
+        raise HTTPException(status_code=404, detail="Nenhum aluno encontrado")
+
+    return usuarios
