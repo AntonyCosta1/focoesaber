@@ -49,7 +49,7 @@ export default function RelatoriosPage() {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/alunos/buscar/${encodeURIComponent(nomeAluno)}`
+        `https://focoesaber.onrender.com/alunos/buscar/${encodeURIComponent(nomeAluno)}`
       );
 
       const data = await response.json();
@@ -79,7 +79,7 @@ export default function RelatoriosPage() {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/relatorios/frequencia/${idAlunoSelecionado}`
+        `https://focoesaber.onrender.com/relatorios/frequencia/${idAlunoSelecionado}`
       );
       const data = await response.json();
 
@@ -102,7 +102,7 @@ export default function RelatoriosPage() {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/relatorios/status/${idAlunoSelecionado}`
+        `https://focoesaber.onrender.com/relatorios/status/${idAlunoSelecionado}`
       );
       const data = await response.json();
 
@@ -119,7 +119,7 @@ export default function RelatoriosPage() {
 
   async function buscarAlunosRisco() {
     try {
-      const response = await fetch("http://localhost:8000/relatorios/alunos-risco");
+      const response = await fetch("https://focoesaber.onrender.com/relatorios/alunos-risco");
       const data = await response.json();
       setAlunosRisco(data);
     } catch (error) {

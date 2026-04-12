@@ -74,7 +74,7 @@ export default function IndicacoesPage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/indicacoes/${id_indicacao}/recusar/`, {
+      const response = await fetch(`https://focoesaber.onrender.com/indicacoes/${id_indicacao}/recusar/`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

@@ -51,7 +51,7 @@ export default function ProgressoAlunoPage() {
 
         async function carregarProgresso() {
             try {
-                const response = await fetch(`http://localhost:8000/progresso/aluno/${idAluno}`);
+                const response = await fetch(`https://focoesaber.onrender.com/progresso/aluno/${idAluno}`);
                 const data = await response.json();
 
                 if (!response.ok) {

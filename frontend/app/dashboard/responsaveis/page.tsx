@@ -28,7 +28,7 @@ export default function ResponsaveisPage() {
 
         async function carregarResponsaveis() {
             try {
-                const response = await fetch("http://localhost:8000/usuarios/");
+                const response = await fetch("https://focoesaber.onrender.com/usuarios/");
                 const data = await response.json();
 
                 const filtrados = data.filter(

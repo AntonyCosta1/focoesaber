@@ -101,7 +101,7 @@ export default function AtividadesPage() {
     if (!confirmar) return;
 
     try {
-      const response = await fetch(`http://localhost:8000/atividades/${idAtividade}`, {
+      const response = await fetch(`https://focoesaber.onrender.com/atividades/${idAtividade}`, {
         method: "DELETE",
       });
 

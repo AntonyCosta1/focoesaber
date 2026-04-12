@@ -28,7 +28,7 @@ export default function AlunosPage() {
 
     async function carregarAlunos() {
       try {
-        const response = await fetch("http://localhost:8000/alunos/");
+        const response = await fetch("https://focoesaber.onrender.com/alunos/");
         const data = await response.json();
         setAlunos(data);
       } catch (error) {

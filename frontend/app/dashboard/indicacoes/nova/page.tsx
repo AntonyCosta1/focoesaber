@@ -67,7 +67,7 @@ export default function NovaIndicacaoPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8000/indicacoes/", {
+      const response = await fetch("https://focoesaber.onrender.com/indicacoes/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -50,9 +50,9 @@ export default function DashboardPage() {
     async function carregarDashboard() {
       try {
         const [resAlunos, resUsers, resRisco] = await Promise.all([
-          fetch("http://localhost:8000/alunos/"),
-          fetch("http://localhost:8000/usuarios/"),
-          fetch("http://localhost:8000/relatorios/alunos-risco"),
+          fetch("https://focoesaber.onrender.com/alunos/"),
+          fetch("https://focoesaber.onrender.com/usuarios/"),
+          fetch("https://focoesaber.onrender.com/relatorios/alunos-risco"),
         ]);
 
         const alunosData: Aluno[] = await resAlunos.json();

@@ -24,7 +24,7 @@ export default function NovoResponsavelPage() {
         setLoading(true);
 
         try {
-            const response = await fetch("http://localhost:8000/usuarios/", {
+            const response = await fetch("https://focoesaber.onrender.com/usuarios/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

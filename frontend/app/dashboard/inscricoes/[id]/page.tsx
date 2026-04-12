@@ -30,7 +30,7 @@ export default function finalizarInscricaoPage() {
 
         async function carregarAtividades() {
             try {
-                const response = await fetch("http://localhost:8000/atividades/");
+                const response = await fetch("https://focoesaber.onrender.com/atividades/");
                 const data = await response.json();
                 setAtividades(data);
             } catch (error) {
@@ -52,7 +52,7 @@ export default function finalizarInscricaoPage() {
         setLoading(true);
 
         try {
-            const response = await fetch(`http://localhost:8000/inscricoes/${idIndicacao}/finalizar/`, {
+            const response = await fetch(`https://focoesaber.onrender.com/inscricoes/${idIndicacao}/finalizar/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

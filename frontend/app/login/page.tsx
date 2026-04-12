@@ -11,7 +11,7 @@ export default function LoginPage() {
 
   async function handleLogin() {
     try {
-      const response = await fetch("http://localhost:8000/login/login", {
+      const response = await fetch("https://focoesaber.onrender.com/login/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

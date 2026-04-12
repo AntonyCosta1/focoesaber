@@ -39,8 +39,8 @@ export default function NovoAlunoPage() {
     async function carregarDados() {
       try {
         const [resEscolas, resUsuarios] = await Promise.all([
-          fetch("http://localhost:8000/escolas/"),
-          fetch("http://localhost:8000/usuarios/"),
+          fetch("https://focoesaber.onrender.com/escolas/"),
+          fetch("https://focoesaber.onrender.com/usuarios/"),
         ]);
 
         const dataEscolas = await resEscolas.json();

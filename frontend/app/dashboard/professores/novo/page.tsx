@@ -24,7 +24,7 @@ export default function NovoProfessorPage() {
         setLoading(true);
 
         try {
-            const response = await fetch("http://localhost:8000/users/", {
+            const response = await fetch("https://focoesaber.onrender.com/users/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
