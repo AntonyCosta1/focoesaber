@@ -69,7 +69,7 @@ export default function NovoAlunoPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8000/alunos/", {
+      const response = await fetch("https://focoesaber.onrender.com/alunos/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

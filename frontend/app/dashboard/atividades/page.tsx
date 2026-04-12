@@ -32,8 +32,8 @@ export default function AtividadesPage() {
   async function carregarDados() {
     try {
       const [resAtividades, resEscolas] = await Promise.all([
-        fetch("http://localhost:8000/atividades/"),
-        fetch("http://localhost:8000/escolas/"),
+        fetch("https://focoesaber.onrender.com/atividades/"),
+        fetch("https://focoesaber.onrender.com/escolas/"),
       ]);
 
       const dataAtividades = await resAtividades.json();
@@ -63,7 +63,7 @@ export default function AtividadesPage() {
     setSalvando(true);
 
     try {
-      const response = await fetch("http://localhost:8000/atividades/", {
+      const response = await fetch("https://focoesaber.onrender.com/atividades/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

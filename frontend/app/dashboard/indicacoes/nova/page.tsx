@@ -37,8 +37,8 @@ export default function NovaIndicacaoPage() {
     async function carregarDados() {
       try {
         const [resAlunos, resUsuarios] = await Promise.all([
-          fetch("http://localhost:8000/alunos/"),
-          fetch("http://localhost:8000/users/"),
+          fetch("https://focoesaber.onrender.com/alunos/"),
+          fetch("https://focoesaber.onrender.com/users/"),
         ]);
 
         const dataAlunos = await resAlunos.json();

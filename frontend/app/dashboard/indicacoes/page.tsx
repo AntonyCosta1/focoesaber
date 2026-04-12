@@ -20,7 +20,7 @@ export default function IndicacoesPage() {
 
   async function carregarIndicacoes() {
     try {
-      const response = await fetch("http://localhost:8000/indicacoes/");
+      const response = await fetch("https://focoesaber.onrender.com/indicacoes/");
       const data = await response.json();
       setIndicacoes(data);
     } catch (error) {
@@ -41,7 +41,7 @@ export default function IndicacoesPage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/indicacoes/${id_indicacao}/aprovar/`, {
+      const response = await fetch(`https://focoesaber.onrender.com/indicacoes/${id_indicacao}/aprovar/`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
