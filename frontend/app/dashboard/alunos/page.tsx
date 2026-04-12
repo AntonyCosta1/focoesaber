@@ -4,6 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Search, Users } from "lucide-react";
 
+type Usuario = {
+  id_usuario: number;
+  nome: string;
+  tipo_usuario: string;
+};
+
 type Aluno = {
   id_aluno: number;
   nome: string;
@@ -17,6 +23,7 @@ export default function AlunosPage() {
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState("");
+  const [responsaveis, setResponsaveis] = useState<Usuario[]>([]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -26,24 +33,37 @@ export default function AlunosPage() {
       return;
     }
 
-    async function carregarAlunos() {
+    async function carregarDados() {
       try {
-        const response = await fetch("https://focoesaber.onrender.com/alunos/");
-        const data = await response.json();
-        setAlunos(data);
+        const [resAlunos, resUsuarios] = await Promise.all([
+          fetch("https://focoesaber.onrender.com/alunos/"),
+          fetch("https://focoesaber.onrender.com/usuarios/"),
+        ]);
+
+        const alunosData = await resAlunos.json();
+        const usuariosData = await resUsuarios.json();
+
+        setAlunos(alunosData);
+        setResponsaveis(usuariosData);
       } catch (error) {
-        console.error("Erro ao carregar alunos:", error);
+        console.error("Erro ao carregar dados:", error);
       } finally {
         setLoading(false);
       }
     }
 
-    carregarAlunos();
+    carregarDados();
   }, [router]);
 
-  const alunosFiltrados = alunos.filter((aluno) =>
-    aluno.nome.toLowerCase().includes(busca.toLowerCase()) ||
-    aluno.matricula.toLowerCase().includes(busca.toLowerCase())
+  function getNomeResponsavel(id: number) {
+    const resp = responsaveis.find((r) => r.id_usuario === id);
+    return resp ? resp.nome : "Não encontrado";
+  }
+
+  const alunosFiltrados = alunos.filter(
+    (aluno) =>
+      aluno.nome.toLowerCase().includes(busca.toLowerCase()) ||
+      aluno.matricula.toLowerCase().includes(busca.toLowerCase())
   );
 
   return (
@@ -72,16 +92,9 @@ export default function AlunosPage() {
             <Plus size={18} />
             Novo aluno
           </button>
-
-          <button
-            onClick={() => router.push(`/dashboard/alunos/${idAluno}/registrar`)}
-            className="mt-4 rounded-xl bg-green-500 px-4 py-3 text-sm font-medium text-white hover:bg-green-600 transition"
-          >
-            Registrar progresso
-          </button>
         </header>
 
-        <section className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <section className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-sm text-slate-500">Total de alunos</p>
             <h2 className="mt-2 text-3xl font-bold">{alunos.length}</h2>
@@ -147,11 +160,15 @@ export default function AlunosPage() {
                       <td className="px-6 py-4 font-medium">{aluno.nome}</td>
                       <td className="px-6 py-4">{aluno.matricula}</td>
                       <td className="px-6 py-4">{aluno.id_escola}</td>
-                      <td className="px-6 py-4">{aluno.id_responsavel}</td>
+                      <td className="px-6 py-4">
+                        {getNomeResponsavel(aluno.id_responsavel)}
+                      </td>
                       <td className="px-6 py-4">
                         <button
-                          onClick={() => router.push(`/dashboard/alunos/${aluno.id_aluno}`)}
-                          className="rounded-lg bg-blue-500 px-3 py-2 text-xs font-medium text-white hover:bg-blue-600 transition"
+                          onClick={() =>
+                            router.push(`/dashboard/alunos/${aluno.id_aluno}`)
+                          }
+                          className="rounded-lg bg-blue-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-blue-600"
                         >
                           Ver progresso
                         </button>
