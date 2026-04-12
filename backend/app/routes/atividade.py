@@ -27,6 +27,18 @@ def criar_atividade(data: CriarAtividade, db: Session = Depends(get_db)):
     db.refresh(atividade)
     return atividade
 
+@router.delete("/{id_atividade}")
+def excluir_atividade(id_atividade: int, db: Session = Depends(get_db)):
+    atividade = db.query(Atividade).filter(Atividade.id_atividade == id_atividade).first()
+
+    if not atividade:
+        raise HTTPException(status_code=404, detail="Atividade não encontrada")
+    
+    db.delete(atividade)
+    db.commit()
+
+    return {"message": "Atividade excluida com sucesso"}
+
 @router.get("/", response_model=list[AtividadeResponse])
 def listar_atividades(db: Session = Depends(get_db)):
     return db.query(Atividade).all()

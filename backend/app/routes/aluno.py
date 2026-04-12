@@ -35,3 +35,12 @@ def criar_aluno(data: CriarAluno, db: Session = Depends(get_db)):
 @router.get("/", response_model=list[AlunoResponse])
 def listar_alunos(db: Session = Depends(get_db)):
     return db.query(Aluno).all()
+
+@router.get("/buscar/{nome}")
+def buscar_aluno_por_nome(nome: str, db: Session = Depends(get_db)):
+    alunos = db.query(Aluno).filter(Aluno.nome.ilike(f"%{nome}%")).all()
+
+    if not alunos:
+        raise HTTPException(status_code=404, detail="Nenhum aluno encontrado")
+
+    return alunos
