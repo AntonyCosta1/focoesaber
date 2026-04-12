@@ -38,7 +38,7 @@ export default function NovaIndicacaoPage() {
       try {
         const [resAlunos, resUsuarios] = await Promise.all([
           fetch("https://focoesaber.onrender.com/alunos/"),
-          fetch("https://focoesaber.onrender.com/users/"),
+          fetch("https://focoesaber.onrender.com/usuarios/"),
         ]);
 
         const dataAlunos = await resAlunos.json();
