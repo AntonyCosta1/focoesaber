@@ -17,7 +17,6 @@ type Usuario = {
   nome: string;
   tipo_usuario: string;
 };
-
 type Inscricao = {
   id_inscricao: number;
   id_indicacao: number;
@@ -28,49 +27,35 @@ type Inscricao = {
 
 export default function IndicacoesPage() {
   const [indicacoes, setIndicacoes] = useState<Indicacao[]>([]);
-  const [inscricoes, setInscricoes] = useState<Inscricao[]>([]);
   const [loading, setLoading] = useState(true);
-  const [erro, setErro] = useState("");
 
   const [idResponsavel, setIdResponsavel] = useState("");
   const [nomeResponsavel, setNomeResponsavel] = useState("");
   const [responsaveis, setResponsaveis] = useState<Usuario[]>([]);
   const [buscandoResponsavel, setBuscandoResponsavel] = useState(false);
 
+  const [inscricoes, setInscricoes] = useState<Inscricao[]>([]);
+
   const router = useRouter();
 
   async function carregarIndicacoes() {
-    setLoading(true);
-    setErro("");
+  try {
+    const [resIndicacoes, resInscricoes] = await Promise.all([
+      fetch("https://focoesaber.onrender.com/indicacoes/"),
+      fetch("https://focoesaber.onrender.com/inscricoes/"),
+    ]);
 
-    try {
-      const [resIndicacoes, resInscricoes] = await Promise.all([
-        fetch("https://focoesaber.onrender.com/indicacoes/"),
-        fetch("https://focoesaber.onrender.com/inscricoes/"),
-      ]);
+    const dataIndicacoes = await resIndicacoes.json();
+    const dataInscricoes = await resInscricoes.json();
 
-      if (!resIndicacoes.ok) {
-        throw new Error("Erro ao carregar indicações");
-      }
-
-      if (!resInscricoes.ok) {
-        throw new Error("Erro ao carregar inscrições");
-      }
-
-      const dataIndicacoes = await resIndicacoes.json();
-      const dataInscricoes = await resInscricoes.json();
-
-      setIndicacoes(Array.isArray(dataIndicacoes) ? dataIndicacoes : []);
-      setInscricoes(Array.isArray(dataInscricoes) ? dataInscricoes : []);
-    } catch (error) {
-      console.error("Erro ao carregar indicações:", error);
-      setErro("Não foi possível carregar as indicações.");
-      setIndicacoes([]);
-      setInscricoes([]);
-    } finally {
-      setLoading(false);
-    }
+    setIndicacoes(dataIndicacoes);
+    setInscricoes(dataInscricoes);
+  } catch (error) {
+    console.error("Erro ao carregar indicações:", error);
+  } finally {
+    setLoading(false);
   }
+}
 
   useEffect(() => {
     carregarIndicacoes();
@@ -87,7 +72,7 @@ export default function IndicacoesPage() {
 
     try {
       const response = await fetch(
-        `https://focoesaber.onrender.com/users/buscar/${encodeURIComponent(nome)}`
+        `https://focoesaber.onrender.com/usuarios/buscar/${encodeURIComponent(nome)}`
       );
 
       if (!response.ok) {
@@ -97,11 +82,9 @@ export default function IndicacoesPage() {
 
       const data = await response.json();
 
-      const somenteResponsaveis = Array.isArray(data)
-        ? data.filter(
-            (usuario: Usuario) => usuario.tipo_usuario === "responsavel"
-          )
-        : [];
+      const somenteResponsaveis = data.filter(
+        (usuario: Usuario) => usuario.tipo_usuario === "responsavel"
+      );
 
       setResponsaveis(somenteResponsaveis);
     } catch (error) {
@@ -275,10 +258,6 @@ export default function IndicacoesPage() {
             <div className="p-6">
               <p className="text-slate-600">Carregando indicações...</p>
             </div>
-          ) : erro ? (
-            <div className="p-6">
-              <p className="text-red-600">{erro}</p>
-            </div>
           ) : indicacoes.length === 0 ? (
             <div className="p-6">
               <p className="text-slate-600">Nenhuma indicação encontrada.</p>
@@ -298,91 +277,65 @@ export default function IndicacoesPage() {
                 </thead>
 
                 <tbody className="divide-y divide-slate-200 text-sm">
-                  {indicacoes.map((indicacao) => {
-                    const inscricaoExistente = inscricoes.find(
-                      (inscricao) =>
-                        inscricao.id_indicacao === indicacao.id_indicacao
-                    );
+                  {indicacoes.map((indicacao) => (
+                    <tr key={indicacao.id_indicacao} className="hover:bg-slate-50">
+                      <td className="px-6 py-4">{indicacao.id_indicacao}</td>
+                      <td className="px-6 py-4">{indicacao.id_aluno}</td>
+                      <td className="px-6 py-4">{indicacao.id_professor}</td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${
+                            indicacao.status_aprovacao === "aprovado"
+                              ? "bg-green-100 text-green-700"
+                              : indicacao.status_aprovacao === "recusado"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
+                        >
+                          {indicacao.status_aprovacao}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">{indicacao.observacao || "-"}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-wrap gap-2">
+                          {indicacao.status_aprovacao === "pendente" && (
+                            <>
+                              <button
+                                onClick={() => aprovarIndicacao(indicacao.id_indicacao)}
+                                className="inline-flex items-center gap-2 rounded-lg bg-green-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-green-600"
+                              >
+                                <CheckCircle2 size={14} />
+                                Aprovar
+                              </button>
 
-                    return (
-                      <tr
-                        key={indicacao.id_indicacao}
-                        className="hover:bg-slate-50"
-                      >
-                        <td className="px-6 py-4">{indicacao.id_indicacao}</td>
-                        <td className="px-6 py-4">{indicacao.id_aluno}</td>
-                        <td className="px-6 py-4">{indicacao.id_professor}</td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`rounded-full px-3 py-1 text-xs font-medium ${
-                              indicacao.status_aprovacao === "aprovado"
-                                ? "bg-green-100 text-green-700"
-                                : indicacao.status_aprovacao === "recusado"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-yellow-100 text-yellow-700"
-                            }`}
-                          >
-                            {indicacao.status_aprovacao}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          {indicacao.observacao || "-"}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-wrap gap-2">
-                            {indicacao.status_aprovacao === "pendente" && (
-                              <>
-                                <button
-                                  onClick={() =>
-                                    aprovarIndicacao(indicacao.id_indicacao)
-                                  }
-                                  className="inline-flex items-center gap-2 rounded-lg bg-green-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-green-600"
-                                >
-                                  <CheckCircle2 size={14} />
-                                  Aprovar
-                                </button>
+                              <button
+                                onClick={() => recusarIndicacao(indicacao.id_indicacao)}
+                                className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-red-600"
+                              >
+                                <XCircle size={14} />
+                                Recusar
+                              </button>
+                            </>
+                          )}
 
-                                <button
-                                  onClick={() =>
-                                    recusarIndicacao(indicacao.id_indicacao)
-                                  }
-                                  className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-red-600"
-                                >
-                                  <XCircle size={14} />
-                                  Recusar
-                                </button>
-                              </>
-                            )}
+                          {indicacao.status_aprovacao === "aprovado" && (
+                            <button
+                              onClick={() =>
+                                router.push(`/dashboard/inscricoes/${indicacao.id_indicacao}`)
+                              }
+                              className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-blue-600"
+                            >
+                              Finalizar inscrição
+                            </button>
+                          )}
 
-                            {indicacao.status_aprovacao === "aprovado" &&
-                              !inscricaoExistente && (
-                                <button
-                                  onClick={() =>
-                                    router.push(
-                                      `/dashboard/inscricoes/${indicacao.id_indicacao}`
-                                    )
-                                  }
-                                  className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-blue-600"
-                                >
-                                  Finalizar inscrição
-                                </button>
-                              )}
-
-                            {indicacao.status_aprovacao === "aprovado" &&
-                              inscricaoExistente && (
-                                <span className="inline-flex items-center gap-2 rounded-lg bg-slate-200 px-3 py-2 text-xs font-medium text-slate-700">
-                                  Inscrição concluída
-                                </span>
-                              )}
-
-                            {indicacao.status_aprovacao === "recusado" && (
-                              <span className="text-slate-500">Sem ações</span>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                          {indicacao.status_aprovacao === "recusado" && (
+                            <span className="text-slate-500">Sem ações</span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
