@@ -77,23 +77,24 @@ export default function ProgressoAlunoPage() {
         <div className="min-h-screen bg-slate-100 p-8 text-slate-900">
             <div className="max-w-7xl mx-auto">
                 <header className="mb-8">
-                    <div>
-                        <button
-                            onClick={() => router.push("/dashboard/alunos")}
-                            className="mb-2 inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900"
-                        >
-                            <ArrowLeft size={16} />
-                            Voltar para alunos
-                        </button>
+                    <button
+                        onClick={() => router.push("/dashboard/alunos")}
+                        className="mb-4 inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900"
+                    >
+                        <ArrowLeft size={16} />
+                        Voltar para alunos
+                    </button>
+                    <button
+                        onClick={() => router.push(`/dashboard/alunos/${idAluno}/registrar`)}
+                        className="mt-4 rounded-xl bg-green-500 px-4 py-3 text-sm font-medium text-white hover:bg-green-600 transition"
+                    >
+                        Registrar progresso
+                    </button>
 
-                        <h1 className="text-3xl font-bold tracking-tight">
-                            Progresso do aluno
-                        </h1>
-
-                        <p className="mt-1 text-slate-600">
-                            Acompanhe frequência, inscrição e desempenho acadêmico.
-                        </p>
-                    </div>
+                    <h1 className="text-3xl font-bold tracking-tight">Progresso do aluno</h1>
+                    <p className="mt-1 text-slate-600">
+                        Acompanhe frequência, inscrição e desempenho acadêmico.
+                    </p>
                 </header>
 
                 {loading ? (
