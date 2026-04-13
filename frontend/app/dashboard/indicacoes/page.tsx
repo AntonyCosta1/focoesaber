@@ -39,23 +39,23 @@ export default function IndicacoesPage() {
   const router = useRouter();
 
   async function carregarIndicacoes() {
-  try {
-    const [resIndicacoes, resInscricoes] = await Promise.all([
-      fetch("https://focoesaber.onrender.com/indicacoes/"),
-      fetch("https://focoesaber.onrender.com/inscricoes/"),
-    ]);
+    try {
+      const [resIndicacoes, resInscricoes] = await Promise.all([
+        fetch("https://focoesaber.onrender.com/indicacoes/"),
+        fetch("https://focoesaber.onrender.com/inscricoes/"),
+      ]);
 
-    const dataIndicacoes = await resIndicacoes.json();
-    const dataInscricoes = await resInscricoes.json();
+      const dataIndicacoes = await resIndicacoes.json();
+      const dataInscricoes = await resInscricoes.json();
 
-    setIndicacoes(dataIndicacoes);
-    setInscricoes(dataInscricoes);
-  } catch (error) {
-    console.error("Erro ao carregar indicações:", error);
-  } finally {
-    setLoading(false);
+      setIndicacoes(dataIndicacoes);
+      setInscricoes(dataInscricoes);
+    } catch (error) {
+      console.error("Erro ao carregar indicações:", error);
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
   useEffect(() => {
     carregarIndicacoes();
@@ -284,13 +284,12 @@ export default function IndicacoesPage() {
                       <td className="px-6 py-4">{indicacao.id_professor}</td>
                       <td className="px-6 py-4">
                         <span
-                          className={`rounded-full px-3 py-1 text-xs font-medium ${
-                            indicacao.status_aprovacao === "aprovado"
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${indicacao.status_aprovacao === "aprovado"
                               ? "bg-green-100 text-green-700"
                               : indicacao.status_aprovacao === "recusado"
-                              ? "bg-red-100 text-red-700"
-                              : "bg-yellow-100 text-yellow-700"
-                          }`}
+                                ? "bg-red-100 text-red-700"
+                                : "bg-yellow-100 text-yellow-700"
+                            }`}
                         >
                           {indicacao.status_aprovacao}
                         </span>
@@ -327,6 +326,10 @@ export default function IndicacoesPage() {
                             >
                               Finalizar inscrição
                             </button>
+                          )}
+
+                          {indicacao.status_aprovacao === "aprovado" && (
+                            <span className="text-slate-500">Sem ações</span>
                           )}
 
                           {indicacao.status_aprovacao === "recusado" && (
