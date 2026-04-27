@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -6,11 +6,21 @@ from app.database import get_db
 from app.models.aluno import Aluno
 from app.models.frequencia import Frequencia
 from app.models.inscricao import Inscricao
+from app.dependencies.auth import get_current_user, exigir_perfil
+from app.models.user import User
 
 router = APIRouter(prefix="/relatorios", tags=["Relatórios"])
 
 @router.get("/frequencia/{id_aluno}")
-def relatorio_frequencia(id_aluno: int, db: Session = Depends(get_db)):
+def relatorio_frequencia(
+    id_aluno: int, 
+    db: Session = Depends(get_db),
+    usuario_atual: User = Depends(get_current_user)
+    ):
+    if usuario_atual.tipo_usuario == "responsavel":
+        if aluno.id_responsavel != usuario_atual.id_usuario:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+
     inscricao = db.query(Inscricao).filter(Inscricao.id_aluno == id_aluno).first()
     if not inscricao:
         return {"msg": "Aluno não encontrado ou não inscrito em nenhuma atividade"}
@@ -30,7 +40,10 @@ def relatorio_frequencia(id_aluno: int, db: Session = Depends(get_db)):
     }
 
 @router.get("/alunos-risco")
-def alunos_em_risco(db: Session = Depends(get_db)):
+def alunos_em_risco(
+    db: Session = Depends(get_db),
+    usuario_atual: User = Depends(exigir_perfil("admin","professor"))
+    ):
     alunos = db.query(Aluno).all()
     resultado = []
 

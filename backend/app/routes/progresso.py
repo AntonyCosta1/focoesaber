@@ -6,12 +6,22 @@ from app.models.aluno import Aluno
 from app.models.inscricao import Inscricao
 from app.models.frequencia import Frequencia
 from app.models.desempenho import Desempenho
+from app.dependencies.auth import get_current_user
+from app.models.user import User
 
 router = APIRouter(prefix="/progresso", tags=["Progresso"])
 
 
 @router.get("/aluno/{id_aluno}")
-def consultar_progresso_aluno(id_aluno: int, db: Session = Depends(get_db)):
+def consultar_progresso_aluno(
+    id_aluno: int,
+    db: Session = Depends(get_db),
+    usuario_atual: User = Depends(get_current_user)
+    ):
+    if usuario_atual.tipo_usuario == "responsavel":
+        if aluno.id_responsavel != usuario_atual.id_usuario:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
     aluno = db.query(Aluno).filter(Aluno.id_aluno == id_aluno).first()
     if not aluno:
         raise HTTPException(status_code=404, detail="Aluno não encontrado")

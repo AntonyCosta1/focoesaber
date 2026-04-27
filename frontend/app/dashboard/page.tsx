@@ -16,9 +16,13 @@ import {
   GraduationCap,
 } from "lucide-react";
 
+const API_URL = "https://focoesaber.onrender.com";
+
 type Usuario = {
   id_usuario: number;
-  tipo_usuario: string;
+  nome: string;
+  email: string;
+  tipo_usuario: "admin" | "professor" | "responsavel";
 };
 
 type Aluno = {
@@ -34,6 +38,7 @@ type AlunoRisco = {
 export default function DashboardPage() {
   const router = useRouter();
 
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [totalAlunos, setTotalAlunos] = useState(0);
   const [totalResponsaveis, setTotalResponsaveis] = useState(0);
   const [totalProfessores, setTotalProfessores] = useState(0);
@@ -47,26 +52,54 @@ export default function DashboardPage() {
       return;
     }
 
+    const headers = {
+      Authorization: `Bearer ${token}`,
+    };
+
     async function carregarDashboard() {
       try {
-        const [resAlunos, resUsers, resRisco] = await Promise.all([
-          fetch("https://focoesaber.onrender.com/alunos/"),
-          fetch("https://focoesaber.onrender.com/usuarios/"),
-          fetch("https://focoesaber.onrender.com/relatorios/alunos-risco"),
-        ]);
+        const resMe = await fetch(`${API_URL}/usuarios/me`, { headers });
 
-        const alunosData: Aluno[] = await resAlunos.json();
-        const usersData: Usuario[] = await resUsers.json();
-        const riscoData: AlunoRisco[] = await resRisco.json();
+        if (!resMe.ok) {
+          localStorage.removeItem("token");
+          router.push("/login");
+          return;
+        }
 
+        const usuarioLogado: Usuario = await resMe.json();
+        setUsuario(usuarioLogado);
+
+        const resAlunos = await fetch(`${API_URL}/alunos/`, { headers });
+        const alunosData: Aluno[] = resAlunos.ok ? await resAlunos.json() : [];
         setTotalAlunos(alunosData.length);
-        setTotalResponsaveis(
-          usersData.filter((u) => u.tipo_usuario === "responsavel").length
-        );
-        setTotalProfessores(
-          usersData.filter((u) => u.tipo_usuario === "professor").length
-        );
-        setTotalRisco(riscoData.length);
+
+        if (usuarioLogado.tipo_usuario === "admin") {
+          const resUsers = await fetch(`${API_URL}/usuarios/`, { headers });
+          const usersData: Usuario[] = resUsers.ok ? await resUsers.json() : [];
+
+          setTotalResponsaveis(
+            usersData.filter((u) => u.tipo_usuario === "responsavel").length
+          );
+
+          setTotalProfessores(
+            usersData.filter((u) => u.tipo_usuario === "professor").length
+          );
+        }
+
+        if (
+          usuarioLogado.tipo_usuario === "admin" ||
+          usuarioLogado.tipo_usuario === "professor"
+        ) {
+          const resRisco = await fetch(`${API_URL}/relatorios/alunos-risco`, {
+            headers,
+          });
+
+          const riscoData: AlunoRisco[] = resRisco.ok
+            ? await resRisco.json()
+            : [];
+
+          setTotalRisco(riscoData.length);
+        }
       } catch (error) {
         console.error("Erro ao carregar métricas do dashboard:", error);
       }
@@ -80,32 +113,56 @@ export default function DashboardPage() {
     router.push("/login");
   }
 
+  function nomePerfil(tipo?: string) {
+    if (tipo === "admin") return "Administrador";
+    if (tipo === "professor") return "Professor";
+    if (tipo === "responsavel") return "Responsável";
+    return "Carregando...";
+  }
+
+  const tipoUsuario = usuario?.tipo_usuario;
+
   const acoes = [
     {
       titulo: "Cadastrar aluno",
       descricao: "Inicie um novo cadastro no projeto.",
       icone: <UserPlus size={22} />,
       rota: "/dashboard/alunos/novo_aluno",
+      perfis: ["admin", "professor"],
     },
     {
       titulo: "Pesquisar aluno",
       descricao: "Consulte progresso, frequência e situação.",
       icone: <Search size={22} />,
       rota: "/dashboard/alunos",
+      perfis: ["admin", "professor"],
+    },
+    {
+      titulo: "Meus alunos",
+      descricao: "Acompanhe frequência, desempenho e progresso.",
+      icone: <Search size={22} />,
+      rota: "/dashboard/alunos",
+      perfis: ["responsavel"],
     },
     {
       titulo: "Gerenciar atividades",
       descricao: "Cadastre e organize atividades recreativas.",
       icone: <PlusCircle size={22} />,
       rota: "/dashboard/atividades",
+      perfis: ["admin"],
     },
     {
       titulo: "Ver relatórios",
       descricao: "Acompanhe frequência, risco e status.",
       icone: <BarChart3 size={22} />,
       rota: "/dashboard/relatorios",
+      perfis: ["admin", "professor"],
     },
   ];
+
+  const acoesFiltradas = acoes.filter(
+    (acao) => tipoUsuario && acao.perfis.includes(tipoUsuario)
+  );
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
@@ -117,7 +174,7 @@ export default function DashboardPage() {
                 Foco é Saber
               </h1>
               <p className="text-sm text-slate-300 mt-2">
-                Painel administrativo do sistema
+                Painel do sistema
               </p>
             </div>
 
@@ -130,53 +187,71 @@ export default function DashboardPage() {
                 Dashboard
               </button>
 
-              <button
-                onClick={() => router.push("/dashboard/responsaveis")}
-                className="w-full flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-slate-800 transition"
-              >
-                <Users size={18} />
-                Responsáveis
-              </button>
+              {tipoUsuario === "admin" && (
+                <>
+                  <button
+                    onClick={() => router.push("/dashboard/responsaveis")}
+                    className="w-full flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-slate-800 transition"
+                  >
+                    <Users size={18} />
+                    Responsáveis
+                  </button>
 
-              <button
-                onClick={() => router.push("/dashboard/professores")}
-                className="w-full flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-slate-800 transition"
-              >
-                <GraduationCap size={18} />
-                Professores
-              </button>
+                  <button
+                    onClick={() => router.push("/dashboard/professores")}
+                    className="w-full flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-slate-800 transition"
+                  >
+                    <GraduationCap size={18} />
+                    Professores
+                  </button>
 
-              <button
-                onClick={() => router.push("/dashboard/alunos")}
-                className="w-full flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-slate-800 transition"
-              >
-                <Users size={18} />
-                Alunos
-              </button>
+                  <button
+                    onClick={() => router.push("/dashboard/atividades")}
+                    className="w-full flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-slate-800 transition"
+                  >
+                    <Dumbbell size={18} />
+                    Atividades
+                  </button>
+                </>
+              )}
 
-              <button
-                onClick={() => router.push("/dashboard/indicacoes")}
-                className="w-full flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-slate-800 transition"
-              >
-                <ClipboardList size={18} />
-                Indicações
-              </button>
+              {(tipoUsuario === "admin" || tipoUsuario === "professor") && (
+                <>
+                  <button
+                    onClick={() => router.push("/dashboard/alunos")}
+                    className="w-full flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-slate-800 transition"
+                  >
+                    <Users size={18} />
+                    Alunos
+                  </button>
 
-              <button
-                onClick={() => router.push("/dashboard/atividades")}
-                className="w-full flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-slate-800 transition"
-              >
-                <Dumbbell size={18} />
-                Atividades
-              </button>
+                  <button
+                    onClick={() => router.push("/dashboard/indicacoes")}
+                    className="w-full flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-slate-800 transition"
+                  >
+                    <ClipboardList size={18} />
+                    Indicações
+                  </button>
 
-              <button
-                onClick={() => router.push("/dashboard/relatorios")}
-                className="w-full flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-slate-800 transition"
-              >
-                <FileBarChart2 size={18} />
-                Relatórios
-              </button>
+                  <button
+                    onClick={() => router.push("/dashboard/relatorios")}
+                    className="w-full flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-slate-800 transition"
+                  >
+                    <FileBarChart2 size={18} />
+                    Relatórios
+                  </button>
+                </>
+              )}
+
+              {tipoUsuario === "responsavel" && (
+                <button
+                  onClick={() => router.push("/dashboard/alunos")}
+                  className="w-full flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-slate-800 transition"
+                >
+                  <Users size={18} />
+                  Meus alunos
+                </button>
+              )}
             </nav>
           </div>
 
@@ -200,37 +275,51 @@ export default function DashboardPage() {
 
             <div className="rounded-2xl bg-white px-5 py-3 shadow-sm border border-slate-200">
               <p className="text-sm text-slate-500">Perfil ativo</p>
-              <p className="font-semibold">Administrador</p>
+              <p className="font-semibold">{nomePerfil(tipoUsuario)}</p>
             </div>
           </header>
 
           <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
             <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
-              <p className="text-sm text-slate-500">Alunos cadastrados</p>
+              <p className="text-sm text-slate-500">
+                {tipoUsuario === "responsavel"
+                  ? "Meus alunos"
+                  : "Alunos cadastrados"}
+              </p>
               <h3 className="text-3xl font-bold mt-2">{totalAlunos}</h3>
             </div>
 
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
-              <p className="text-sm text-slate-500">Responsáveis</p>
-              <h3 className="text-3xl font-bold mt-2">{totalResponsaveis}</h3>
-            </div>
+            {tipoUsuario === "admin" && (
+              <>
+                <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+                  <p className="text-sm text-slate-500">Responsáveis</p>
+                  <h3 className="text-3xl font-bold mt-2">
+                    {totalResponsaveis}
+                  </h3>
+                </div>
 
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
-              <p className="text-sm text-slate-500">Professores</p>
-              <h3 className="text-3xl font-bold mt-2">{totalProfessores}</h3>
-            </div>
+                <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+                  <p className="text-sm text-slate-500">Professores</p>
+                  <h3 className="text-3xl font-bold mt-2">
+                    {totalProfessores}
+                  </h3>
+                </div>
+              </>
+            )}
 
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
-              <p className="text-sm text-slate-500">Alunos em risco</p>
-              <h3 className="text-3xl font-bold mt-2">{totalRisco}</h3>
-            </div>
+            {(tipoUsuario === "admin" || tipoUsuario === "professor") && (
+              <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+                <p className="text-sm text-slate-500">Alunos em risco</p>
+                <h3 className="text-3xl font-bold mt-2">{totalRisco}</h3>
+              </div>
+            )}
           </section>
 
           <section>
             <h3 className="text-xl font-semibold mb-4">Ações rápidas</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {acoes.map((acao) => (
+              {acoesFiltradas.map((acao) => (
                 <button
                   key={acao.titulo}
                   onClick={() => router.push(acao.rota)}

@@ -5,11 +5,16 @@ from app.models.aluno import Aluno
 from app.models.user import User
 from app.models.escola import Escola
 from app.schemas.aluno import CriarAluno, AlunoResponse
+from app.dependencies.auth import exigir_perfil, get_current_user
 
 router = APIRouter(prefix="/alunos", tags=["Alunos"])
 
 @router.post("/", response_model=AlunoResponse)
-def criar_aluno(data: CriarAluno, db: Session = Depends(get_db)):
+def criar_aluno(
+    data: CriarAluno,
+    db: Session = Depends(get_db),
+    usuario_atual: User = Depends(exigir_perfil("admin", "responsavel"))
+):
     responsavel = db.query(User).filter(User.id_usuario == data.id_responsavel).first()
     if not responsavel:
         raise HTTPException(status_code=404, detail="Responsável não encontrado")
@@ -33,7 +38,12 @@ def criar_aluno(data: CriarAluno, db: Session = Depends(get_db)):
     return aluno
 
 @router.get("/", response_model=list[AlunoResponse])
-def listar_alunos(db: Session = Depends(get_db)):
+def listar_alunos(
+    db: Session = Depends(get_db),
+    usuario_atual: User = Depends(exigir_perfil("admin", "responsavel"))
+):
+    if usuario_atual.tipo_usuario == "responsavel":
+        return db.query(Aluno).filter(Aluno.id_responsavel == usuario_atual.id_usuario).all()
     return db.query(Aluno).all()
 
 @router.get("/buscar/{nome}")

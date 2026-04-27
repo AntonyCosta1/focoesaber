@@ -6,6 +6,7 @@ from app.models.aluno import Aluno
 from app.models.user import User
 from app.models.indicacao import Indicacao
 from app.models.historico_aprovacao import HistoricoAprovacao
+from app.dependencies.auth import exigir_perfil
 
 from app.schemas.indicacao import CriarIndicacao, IndicacaoResponse
 from app.schemas.historico_aprovacao import (
@@ -17,7 +18,11 @@ from app.schemas.historico_aprovacao import (
 router = APIRouter(prefix="/indicacoes", tags=["Indicações"])
 
 @router.post("/", response_model=IndicacaoResponse)
-def criar_indicacao(data: CriarIndicacao, db: Session = Depends(get_db)):
+def criar_indicacao(
+    data: CriarIndicacao, 
+    db: Session = Depends(get_db),
+    usuario_atual: User = Depends(exigir_perfil("admin","professor"))
+):
     aluno = db.query(Aluno).filter(Aluno.id_aluno == data.id_aluno).first()
     if not aluno:
         raise HTTPException(status_code=404, detail="Aluno não encontrado")
@@ -34,7 +39,7 @@ def criar_indicacao(data: CriarIndicacao, db: Session = Depends(get_db)):
     
     indicacao = Indicacao(
         id_aluno = data.id_aluno,
-        id_professor = data.id_professor,
+        id_professor = usuario_atual.id_usuario,
         observacao = data.observacao,
         status_aprovacao = "pendente"
     )
@@ -46,7 +51,10 @@ def criar_indicacao(data: CriarIndicacao, db: Session = Depends(get_db)):
     return indicacao
 
 @router.get("/", response_model=list[IndicacaoResponse])
-def listar_indicacoes(db: Session = Depends(get_db)):
+def listar_indicacoes(
+    db: Session = Depends(get_db),
+    usuario_atual: User = Depends(exigir_perfil("admin","professor"))
+):
     return db.query(Indicacao).all()
     
 @router.put("/{id_indicacao}/aprovar", response_model=HistoricoAprovacaoResponse)

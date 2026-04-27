@@ -6,13 +6,18 @@ from app.database import get_db
 from app.models.desempenho import Desempenho
 from app.models.inscricao import Inscricao
 from app.models.user import User
+from app.dependencies.auth import get_current_user, exigir_perfil
 
 from app.schemas.desempenho import CriarDesempenho, DesempenhoResponse
 
 router = APIRouter(prefix="/desempenhos", tags=["Desempenhos"])
 
 @router.post("/", response_model=DesempenhoResponse)
-def criar_desempenho(data: CriarDesempenho, db: Session = Depends(get_db)):
+def criar_desempenho(
+    data: CriarDesempenho, 
+    db: Session = Depends(get_db),
+    usuario_atual: User = Depends(exigir_perfil("admin","professor"))
+    ):
     inscricao = db.query(Inscricao).filter(Inscricao.id_inscricao == data.id_inscricao).first()
     if not inscricao:
         raise HTTPException(status_code=404, detail="Inscrição não encontrada")
@@ -26,7 +31,7 @@ def criar_desempenho(data: CriarDesempenho, db: Session = Depends(get_db)):
     
     desempenho = Desempenho(
         id_inscricao=data.id_inscricao,
-        id_professor=data.id_professor,
+        id_professor=usuario_atual.id_usuario,
         descricao=data.descricao,
         observacao=data.observacao,
         validado=True
@@ -38,5 +43,8 @@ def criar_desempenho(data: CriarDesempenho, db: Session = Depends(get_db)):
     return desempenho
 
 @router.get("/", response_model=list[DesempenhoResponse])
-def listar_desempenhos(db: Session = Depends(get_db)):
+def listar_desempenhos(
+    db: Session = Depends(get_db),
+    usuario_atual: User = Depends(exigir_perfil("admin","professor"))
+    ):
     return db.query(Desempenho).all()
