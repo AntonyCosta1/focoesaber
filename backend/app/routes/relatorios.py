@@ -17,6 +17,10 @@ def relatorio_frequencia(
     db: Session = Depends(get_db),
     usuario_atual: User = Depends(get_current_user)
     ):
+    aluno = db.query(Aluno).filter(Aluno.id_aluno == id_aluno).first()
+    if not aluno:
+        raise HTTPException(status_code=404, detail="Aluno não encontrado")
+
     if usuario_atual.tipo_usuario == "responsavel":
         if aluno.id_responsavel != usuario_atual.id_usuario:
             raise HTTPException(status_code=403, detail="Acesso negado")
@@ -61,7 +65,7 @@ def alunos_em_risco(
         presentes = len([f for f in frequencias if f.presente])
         percentual = presentes / total * 100
 
-        if percentual < 75:  # Considera risco se presença for menor que 75%
+        if percentual < 75:
             resultado.append({
                 "id_aluno": aluno.id_aluno,
                 "nome": aluno.nome,

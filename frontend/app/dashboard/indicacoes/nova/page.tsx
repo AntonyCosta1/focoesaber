@@ -15,6 +15,8 @@ type Usuario = {
   tipo_usuario: string;
 };
 
+const API_URL = "https://focoesaber.onrender.com";
+
 export default function NovaIndicacaoPage() {
   const router = useRouter();
 
@@ -36,9 +38,11 @@ export default function NovaIndicacaoPage() {
 
     async function carregarDados() {
       try {
+        // CORRIGIDO: ambas as rotas precisam de Authorization
+        const headers = { Authorization: `Bearer ${token}` };
         const [resAlunos, resUsuarios] = await Promise.all([
-          fetch("https://focoesaber.onrender.com/alunos/"),
-          fetch("https://focoesaber.onrender.com/usuarios/"),
+          fetch(`${API_URL}/alunos/`, { headers }),
+          fetch(`${API_URL}/usuarios/`, { headers }),
         ]);
 
         const dataAlunos = await resAlunos.json();
@@ -64,13 +68,21 @@ export default function NovaIndicacaoPage() {
       return;
     }
 
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await fetch("https://focoesaber.onrender.com/indicacoes/", {
+      // CORRIGIDO: adicionado Authorization header
+      const response = await fetch(`${API_URL}/indicacoes/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           id_aluno: Number(idAluno),

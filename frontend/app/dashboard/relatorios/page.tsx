@@ -29,6 +29,8 @@ type AlunoBusca = {
   matricula: string;
 };
 
+const API_URL = "https://focoesaber.onrender.com";
+
 export default function RelatoriosPage() {
   const router = useRouter();
 
@@ -41,15 +43,29 @@ export default function RelatoriosPage() {
   const [statusAluno, setStatusAluno] = useState<StatusAluno | null>(null);
   const [alunosRisco, setAlunosRisco] = useState<AlunoRisco[]>([]);
 
+  function getToken() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+      return null;
+    }
+    return token;
+  }
+
   async function buscarAlunoPorNome() {
     if (!nomeAluno.trim()) {
       alert("Digite o nome do aluno.");
       return;
     }
 
+    const token = getToken();
+    if (!token) return;
+
     try {
+      // CORRIGIDO: adicionado Authorization — /alunos/buscar exige autenticação
       const response = await fetch(
-        `https://focoesaber.onrender.com/alunos/buscar/${encodeURIComponent(nomeAluno)}`
+        `${API_URL}/alunos/buscar/${encodeURIComponent(nomeAluno)}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       const data = await response.json();
@@ -77,9 +93,14 @@ export default function RelatoriosPage() {
       return;
     }
 
+    const token = getToken();
+    if (!token) return;
+
     try {
+      // CORRIGIDO: adicionado Authorization
       const response = await fetch(
-        `https://focoesaber.onrender.com/relatorios/frequencia/${idAlunoSelecionado}`
+        `${API_URL}/relatorios/frequencia/${idAlunoSelecionado}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await response.json();
 
@@ -102,7 +123,7 @@ export default function RelatoriosPage() {
 
     try {
       const response = await fetch(
-        `https://focoesaber.onrender.com/relatorios/status/${idAlunoSelecionado}`
+        `${API_URL}/relatorios/status/${idAlunoSelecionado}`
       );
       const data = await response.json();
 
@@ -118,9 +139,21 @@ export default function RelatoriosPage() {
   }
 
   async function buscarAlunosRisco() {
+    const token = getToken();
+    if (!token) return;
+
     try {
-      const response = await fetch("https://focoesaber.onrender.com/relatorios/alunos-risco");
+      // CORRIGIDO: adicionado Authorization — /relatorios/alunos-risco exige admin/professor
+      const response = await fetch(`${API_URL}/relatorios/alunos-risco`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.detail || "Erro ao buscar alunos em risco");
+        return;
+      }
+
       setAlunosRisco(data);
     } catch (error) {
       console.error("Erro ao buscar alunos em risco:", error);
@@ -128,9 +161,10 @@ export default function RelatoriosPage() {
   }
 
   function corStatus(status?: string) {
-    if (status === "ativo") return "bg-green-100 text-green-700";
-    if (status === "risco") return "bg-yellow-100 text-yellow-700";
-    if (status === "critico") return "bg-red-100 text-red-700";
+    // CORRIGIDO: os valores retornados pelo backend são "Ativo", "Risco", "Critico" (com maiúscula)
+    if (status === "Ativo") return "bg-green-100 text-green-700";
+    if (status === "Risco") return "bg-yellow-100 text-yellow-700";
+    if (status === "Critico") return "bg-red-100 text-red-700";
     return "bg-slate-100 text-slate-700";
   }
 
@@ -217,10 +251,11 @@ export default function RelatoriosPage() {
                       setFrequencia(null);
                       setStatusAluno(null);
                     }}
-                    className={`rounded-xl border px-4 py-3 text-left transition ${idAlunoSelecionado === aluno.id_aluno
+                    className={`rounded-xl border px-4 py-3 text-left transition ${
+                      idAlunoSelecionado === aluno.id_aluno
                         ? "border-green-500 bg-green-50"
                         : "border-slate-200 bg-white hover:bg-slate-100"
-                      }`}
+                    }`}
                   >
                     <p className="font-medium text-slate-900">{aluno.nome}</p>
                     <p className="text-sm text-slate-500">

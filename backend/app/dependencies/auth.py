@@ -23,7 +23,9 @@ def get_current_user(
     except JWTError:
         raise HTTPException(status_code=401, detail="Token inválido")
     
-    user = db.query(User).filter(User.id_usuario == id_usuario).first()
+    # CORRIGIDO: converter id_usuario para int antes da query
+    # o JWT armazena "sub" como string, mas id_usuario no banco é Integer
+    user = db.query(User).filter(User.id_usuario == int(id_usuario)).first()
 
     if not user:
         raise HTTPException(status_code=401, detail="Usuário não encontrado")
@@ -36,4 +38,3 @@ def exigir_perfil(*perfis):
             raise HTTPException(status_code=403, detail="Acesso negado")
         return usuario_atual
     return verificar
-

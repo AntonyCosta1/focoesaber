@@ -12,6 +12,8 @@ type Usuario = {
     tipo_usuario: string;
 };
 
+const API_URL = "https://focoesaber.onrender.com";
+
 export default function ProfessoresPage() {
     const router = useRouter();
     const [professores, setProfessores] = useState<Usuario[]>([]);
@@ -28,7 +30,16 @@ export default function ProfessoresPage() {
 
         async function carregarProfessores() {
             try {
-                const response = await fetch("https://focoesaber.onrender.com/usuarios/");
+                // CORRIGIDO: adicionado Authorization — /usuarios/ exige perfil admin
+                const response = await fetch(`${API_URL}/usuarios/`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                if (!response.ok) {
+                    console.error("Erro ao carregar usuários:", await response.text());
+                    return;
+                }
+
                 const data = await response.json();
 
                 const filtrados = data.filter(

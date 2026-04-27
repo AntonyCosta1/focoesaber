@@ -16,6 +16,8 @@ type Escola = {
   nome: string;
 };
 
+const API_URL = "https://focoesaber.onrender.com";
+
 export default function AtividadesPage() {
   const router = useRouter();
 
@@ -29,11 +31,25 @@ export default function AtividadesPage() {
   const [idEscola, setIdEscola] = useState("");
   const [salvando, setSalvando] = useState(false);
 
+  function getToken() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+      return null;
+    }
+    return token;
+  }
+
   async function carregarDados() {
+    const token = getToken();
+    if (!token) return;
+
     try {
+      // CORRIGIDO: atividades e escolas precisam de Authorization
+      const headers = { Authorization: `Bearer ${token}` };
       const [resAtividades, resEscolas] = await Promise.all([
-        fetch("https://focoesaber.onrender.com/atividades/"),
-        fetch("https://focoesaber.onrender.com/escolas/"),
+        fetch(`${API_URL}/atividades/`, { headers }),
+        fetch(`${API_URL}/escolas/`),
       ]);
 
       const dataAtividades = await resAtividades.json();
@@ -60,13 +76,18 @@ export default function AtividadesPage() {
       return;
     }
 
+    const token = getToken();
+    if (!token) return;
+
     setSalvando(true);
 
     try {
-      const response = await fetch("https://focoesaber.onrender.com/atividades/", {
+      // CORRIGIDO: adicionado Authorization header
+      const response = await fetch(`${API_URL}/atividades/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           nome,
@@ -100,9 +121,14 @@ export default function AtividadesPage() {
     const confirmar = confirm("Deseja realmente excluir esta atividade?");
     if (!confirmar) return;
 
+    const token = getToken();
+    if (!token) return;
+
     try {
-      const response = await fetch(`https://focoesaber.onrender.com/atividades/${idAtividade}`, {
+      // CORRIGIDO: adicionado Authorization header
+      const response = await fetch(`${API_URL}/atividades/${idAtividade}`, {
         method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       const data = await response.json();
@@ -120,9 +146,10 @@ export default function AtividadesPage() {
     }
   }
 
-  const atividadesFiltradas = atividades.filter((atividade) =>
-    atividade.nome.toLowerCase().includes(busca.toLowerCase()) ||
-    (atividade.descricao || "").toLowerCase().includes(busca.toLowerCase())
+  const atividadesFiltradas = atividades.filter(
+    (atividade) =>
+      atividade.nome.toLowerCase().includes(busca.toLowerCase()) ||
+      (atividade.descricao || "").toLowerCase().includes(busca.toLowerCase())
   );
 
   return (
