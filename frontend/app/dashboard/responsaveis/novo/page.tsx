@@ -1,8 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, UserPlus } from "lucide-react";
+
+type Usuario = {
+  id_usuario: number;
+  nome: string;
+  tipo_usuario: "admin" | "professor" | "responsavel";
+};
 
 export default function NovoResponsavelPage() {
     const router = useRouter();
@@ -12,6 +18,48 @@ export default function NovoResponsavelPage() {
     const [senha, setSenha] = useState("");
     const [telefone, setTelefone] = useState("");
     const [loading, setLoading] = useState(false);
+    const [verificando, setVerificando] = useState(true);
+
+    useEffect(() => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
+
+      async function verificarPermissao() {
+        try {
+          const resMe = await fetch("https://focoesaber.onrender.com/usuarios/me", { headers });
+
+          if (!resMe.ok) {
+            localStorage.removeItem("token");
+            router.push("/login");
+            return;
+          }
+
+          const usuario: Usuario = await resMe.json();
+
+          // Apenas admin e professor podem criar responsáveis
+          if (usuario.tipo_usuario !== "admin" && usuario.tipo_usuario !== "professor") {
+            alert("Você não tem permissão para criar responsáveis");
+            router.push("/dashboard");
+            return;
+          }
+
+          setVerificando(false);
+        } catch (error) {
+          console.error("Erro ao verificar permissão:", error);
+          router.push("/login");
+        }
+      }
+
+      verificarPermissao();
+    }, [router]);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -24,10 +72,17 @@ export default function NovoResponsavelPage() {
         setLoading(true);
 
         try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+              router.push("/login");
+              return;
+            }
+
             const response = await fetch("https://focoesaber.onrender.com/usuarios/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
                 },
                 body: JSON.stringify({
                     nome,
@@ -41,7 +96,12 @@ export default function NovoResponsavelPage() {
             const data = await response.json();
 
             if (!response.ok) {
-                alert(data.detail || "Erro ao cadastrar responsável");
+                if (response.status === 403) {
+                    alert("Você não tem permissão para criar responsáveis");
+                    router.push("/dashboard");
+                } else {
+                    alert(data.detail || "Erro ao cadastrar responsável");
+                }
                 setLoading(false);
                 return;
             }
@@ -54,6 +114,16 @@ export default function NovoResponsavelPage() {
         } finally {
             setLoading(false);
         }
+    }
+
+    if (verificando) {
+        return (
+            <div className="min-h-screen bg-slate-100 p-8 text-slate-900 flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-slate-600">Verificando permissões...</p>
+                </div>
+            </div>
+        );
     }
 
     return (

@@ -98,10 +98,17 @@ export default function NovoAlunoPage() {
     setLoading(true);
 
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
       const response = await fetch("https://focoesaber.onrender.com/alunos/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({
           nome,

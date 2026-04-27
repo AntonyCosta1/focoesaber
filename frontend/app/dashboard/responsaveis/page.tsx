@@ -17,6 +17,7 @@ export default function ResponsaveisPage() {
     const [responsaveis, setResponsaveis] = useState<Usuario[]>([]);
     const [loading, setLoading] = useState(true);
     const [busca, setBusca] = useState("");
+    const [usuarioAtual, setUsuarioAtual] = useState<Usuario | null>(null);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -26,13 +27,30 @@ export default function ResponsaveisPage() {
             return;
         }
 
+        const headers = {
+            Authorization: `Bearer ${token}`,
+        };
+
         async function carregarResponsaveis() {
             try {
-                const response = await fetch("https://focoesaber.onrender.com/usuarios/");
+                // Carregar usuário atual
+                const resMe = await fetch("https://focoesaber.onrender.com/usuarios/me", { headers });
+
+                if (!resMe.ok) {
+                    localStorage.removeItem("token");
+                    router.push("/login");
+                    return;
+                }
+
+                const usuario: Usuario = await resMe.json();
+                setUsuarioAtual(usuario);
+
+                // Carregar responsáveis
+                const response = await fetch("https://focoesaber.onrender.com/usuarios/", { headers });
                 const data = await response.json();
 
                 const filtrados = data.filter(
-                    (usuario: Usuario) => usuario.tipo_usuario === "responsavel"
+                    (user: Usuario) => user.tipo_usuario === "responsavel"
                 );
 
                 setResponsaveis(filtrados);
@@ -72,7 +90,8 @@ export default function ResponsaveisPage() {
 
                     <button
                         onClick={() => router.push("/dashboard/responsaveis/novo")}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-500 px-5 py-3 font-medium text-white shadow-sm hover:bg-green-600 transition"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-500 px-5 py-3 font-medium text-white shadow-sm hover:bg-green-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={usuarioAtual?.tipo_usuario === "responsavel"}
                     >
                         <Plus size={18} />
                         Novo responsável
