@@ -55,6 +55,8 @@ def listar_indicacoes(
     db: Session = Depends(get_db),
     usuario_atual: User = Depends(exigir_perfil("admin","professor"))
 ):
+    if usuario_atual.tipo_usuario == "professor":
+        return db.query(Indicacao).filter(Indicacao.id_professor == usuario_atual.id_usuario).all()
     return db.query(Indicacao).all()
     
 @router.put("/{id_indicacao}/aprovar", response_model=HistoricoAprovacaoResponse)

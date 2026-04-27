@@ -40,17 +40,25 @@ def criar_aluno(
 @router.get("/", response_model=list[AlunoResponse])
 def listar_alunos(
     db: Session = Depends(get_db),
-    usuario_atual: User = Depends(exigir_perfil("admin", "responsavel"))
+    usuario_atual: User = Depends(exigir_perfil("admin", "responsavel", "professor"))
 ):
     if usuario_atual.tipo_usuario == "responsavel":
         return db.query(Aluno).filter(Aluno.id_responsavel == usuario_atual.id_usuario).all()
     return db.query(Aluno).all()
 
 @router.get("/buscar/{nome}")
-def buscar_aluno_por_nome(nome: str, db: Session = Depends(get_db)):
+def buscar_aluno_por_nome(
+    nome: str, 
+    db: Session = Depends(get_db),
+    usuario_atual: User = Depends(exigir_perfil("admin", "responsavel", "professor"))
+):
     alunos = db.query(Aluno).filter(Aluno.nome.ilike(f"%{nome}%")).all()
 
     if not alunos:
         raise HTTPException(status_code=404, detail="Nenhum aluno encontrado")
+    if usuario_atual.tipo_usuario == "responsavel":
+        alunos = [aluno for aluno in alunos if aluno.id_responsavel == usuario_atual.id_usuario]
+        if not alunos:
+            raise HTTPException(status_code=404, detail="Nenhum aluno encontrado para este responsável")
 
     return alunos
