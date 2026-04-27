@@ -9,30 +9,47 @@ export default function LoginPage() {
   const [senha, setSenha] = useState("");
   const router = useRouter();
 
-  async function handleLogin() {
-    try {
-      const response = await fetch("https://focoesaber.onrender.com/login/login", {
+  async function handleLogin(e: React.FormEvent) {
+  e.preventDefault();
+
+  try {
+    const formData = new URLSearchParams();
+    formData.append("username", email);
+    formData.append("password", senha);
+
+    const response = await fetch(
+      "https://focoesaber.onrender.com/login/login",
+      {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: JSON.stringify({ email, senha }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(data.detail || "Erro ao fazer login");
-        return;
+        body: formData,
       }
+    );
 
-      localStorage.setItem("token", data.access_token);
-      router.push("/dashboard");
-    } catch (error) {
-      console.error("Erro no login:", error);
-      alert("Não foi possível conectar ao backend");
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.log("Erro no login:", data);
+
+      const mensagem =
+        data.detail && typeof data.detail === "string"
+          ? data.detail
+          : "Erro ao fazer login. Verifique email e senha.";
+
+      alert(mensagem);
+      return;
     }
+
+    localStorage.setItem("token", data.access_token);
+
+    router.push("/dashboard");
+  } catch (error) {
+    console.error("Erro inesperado:", error);
+    alert("Erro ao conectar com o servidor.");
   }
+}
 
   return (
     <div className="min-h-screen bg-slate-100 flex">
