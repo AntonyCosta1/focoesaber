@@ -33,18 +33,53 @@ export default function AlunosPage() {
       return;
     }
 
+    const headers = {
+      Authorization: `Bearer ${token}`,
+    };
+
     async function carregarDados() {
       try {
-        const [resAlunos, resUsuarios] = await Promise.all([
-          fetch("https://focoesaber.onrender.com/alunos/"),
-          fetch("https://focoesaber.onrender.com/usuarios/"),
-        ]);
+        const resMe = await fetch("https://focoesaber.onrender.com/usuarios/me", {
+          headers,
+        });
+
+        if (!resMe.ok) {
+          localStorage.removeItem("token");
+          router.push("/login");
+          return;
+        }
+
+        const usuarioLogado = await resMe.json();
+
+        const resAlunos = await fetch("https://focoesaber.onrender.com/alunos/", {
+          headers,
+        });
+
+        if (!resAlunos.ok) {
+          console.error("Erro ao buscar alunos:", await resAlunos.text());
+          return;
+        }
 
         const alunosData = await resAlunos.json();
-        const usuariosData = await resUsuarios.json();
-
         setAlunos(alunosData);
-        setResponsaveis(usuariosData);
+
+        if (usuarioLogado.tipo_usuario === "admin") {
+          const resUsuarios = await fetch(
+            "https://focoesaber.onrender.com/usuarios/",
+            { headers }
+          );
+
+          if (resUsuarios.ok) {
+            const usuariosData = await resUsuarios.json();
+            setResponsaveis(
+              usuariosData.filter(
+                (u: Usuario) => u.tipo_usuario === "responsavel"
+              )
+            );
+          }
+        } else {
+          setResponsaveis([]);
+        }
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       } finally {
@@ -57,7 +92,7 @@ export default function AlunosPage() {
 
   function getNomeResponsavel(id: number) {
     const resp = responsaveis.find((r) => r.id_usuario === id);
-    return resp ? resp.nome : "Não encontrado";
+    return resp ? resp.nome : `ID ${id}`;
   }
 
   const alunosFiltrados = alunos.filter(

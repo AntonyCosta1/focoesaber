@@ -38,18 +38,46 @@ export default function IndicacoesPage() {
 
   const router = useRouter();
 
+  const API_URL = "https://focoesaber.onrender.com";
+
+  function getHeaders() {
+    const token = localStorage.getItem("token");
+
+    return {
+      Authorization: `Bearer ${token}`,
+    };
+  }
+
   async function carregarIndicacoes() {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
     try {
+      const headers = getHeaders();
+
       const [resIndicacoes, resInscricoes] = await Promise.all([
-        fetch("https://focoesaber.onrender.com/indicacoes/"),
-        fetch("https://focoesaber.onrender.com/inscricoes/"),
+        fetch(`${API_URL}/indicacoes/`, { headers }),
+        fetch(`${API_URL}/inscricoes/`, { headers }),
       ]);
 
-      const dataIndicacoes = await resIndicacoes.json();
-      const dataInscricoes = await resInscricoes.json();
+      if (!resIndicacoes.ok) {
+        console.error("Erro indicações:", await resIndicacoes.text());
+        return;
+      }
 
+      const dataIndicacoes = await resIndicacoes.json();
       setIndicacoes(dataIndicacoes);
-      setInscricoes(dataInscricoes);
+
+      if (resInscricoes.ok) {
+        const dataInscricoes = await resInscricoes.json();
+        setInscricoes(dataInscricoes);
+      } else {
+        setInscricoes([]);
+      }
     } catch (error) {
       console.error("Erro ao carregar indicações:", error);
     } finally {
@@ -72,7 +100,10 @@ export default function IndicacoesPage() {
 
     try {
       const response = await fetch(
-        `https://focoesaber.onrender.com/usuarios/buscar/${encodeURIComponent(nome)}`
+        `${API_URL}/usuarios/buscar/${encodeURIComponent(nome)}`,
+        {
+          headers: getHeaders(),
+        }
       );
 
       if (!response.ok) {
@@ -94,7 +125,6 @@ export default function IndicacoesPage() {
       setBuscandoResponsavel(false);
     }
   }
-
   async function aprovarIndicacao(id_indicacao: number) {
     if (!idResponsavel) {
       alert("Selecione um responsável pelo nome antes de aprovar a indicação.");
@@ -103,10 +133,11 @@ export default function IndicacoesPage() {
 
     try {
       const response = await fetch(
-        `https://focoesaber.onrender.com/indicacoes/${id_indicacao}/aprovar/`,
+        `${API_URL}/indicacoes/${id_indicacao}/aprovar`,
         {
           method: "PUT",
           headers: {
+            ...getHeaders(),
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
@@ -139,10 +170,11 @@ export default function IndicacoesPage() {
 
     try {
       const response = await fetch(
-        `https://focoesaber.onrender.com/indicacoes/${id_indicacao}/recusar/`,
+        `${API_URL}/indicacoes/${id_indicacao}/recusar`,
         {
           method: "PUT",
           headers: {
+            ...getHeaders(),
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
@@ -285,10 +317,10 @@ export default function IndicacoesPage() {
                       <td className="px-6 py-4">
                         <span
                           className={`rounded-full px-3 py-1 text-xs font-medium ${indicacao.status_aprovacao === "aprovado"
-                              ? "bg-green-100 text-green-700"
-                              : indicacao.status_aprovacao === "recusado"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-yellow-100 text-yellow-700"
+                            ? "bg-green-100 text-green-700"
+                            : indicacao.status_aprovacao === "recusado"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-yellow-100 text-yellow-700"
                             }`}
                         >
                           {indicacao.status_aprovacao}
