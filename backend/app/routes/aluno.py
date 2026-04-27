@@ -13,8 +13,11 @@ router = APIRouter(prefix="/alunos", tags=["Alunos"])
 def criar_aluno(
     data: CriarAluno,
     db: Session = Depends(get_db),
-    usuario_atual: User = Depends(exigir_perfil("admin", "responsavel"))
+    usuario_atual: User = Depends(exigir_perfil("admin", "professor"))
 ):
+    if usuario_atual.tipo_usuario != "professor" | "admin":
+        raise HTTPException(status_code=403, detail="Apenas administradores e professores podem criar alunos")
+    
     responsavel = db.query(User).filter(User.id_usuario == data.id_responsavel).first()
     if not responsavel:
         raise HTTPException(status_code=404, detail="Responsável não encontrado")
@@ -40,7 +43,7 @@ def criar_aluno(
 @router.get("/", response_model=list[AlunoResponse])
 def listar_alunos(
     db: Session = Depends(get_db),
-    usuario_atual: User = Depends(exigir_perfil("admin", "responsavel", "professor"))
+    usuario_atual: User = Depends(exigir_perfil("admin", "professor", "responsavel"))
 ):
     if usuario_atual.tipo_usuario == "responsavel":
         return db.query(Aluno).filter(Aluno.id_responsavel == usuario_atual.id_usuario).all()
