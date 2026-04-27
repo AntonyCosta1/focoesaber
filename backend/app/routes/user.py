@@ -9,7 +9,14 @@ from app.dependencies.auth import exigir_perfil, get_current_user
 router = APIRouter(prefix="/usuarios", tags=["usuarios"])
 
 @router.post("/", response_model=UserResponse)
-def criar_usuario(usuario: CriarUsuario, db: Session = Depends(get_db)):
+def criar_usuario(
+    usuario: CriarUsuario,
+    db: Session = Depends(get_db),
+    usuario_atual: User = Depends(exigir_perfil("admin", "professor"))
+    ):
+    if usuario_atual.tipo_usuario == "professor" and usuario.tipo_usuario != "responsavel":
+        raise HTTPException(status_code=403, detail="Professores só podem criar usuários do tipo responsável")
+    
     existing_user = db.query(User).filter(User.email == usuario.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email já cadastrado")
@@ -36,7 +43,11 @@ def listar_usuarios(
     return db.query(User).all()
 
 @router.get("/buscar/{nome}")
-def buscar_usuario_por_nome(nome: str, db: Session = Depends(get_db)):
+def buscar_usuario_por_nome(
+    nome: str, 
+    db: Session = Depends(get_db),
+    usuario_atual: User = Depends(exigir_perfil("admin", "professor"))
+    ):
     usuarios = db.query(User).filter(User.nome.ilike(f"%{nome}%")).all()
 
     if not usuarios:
