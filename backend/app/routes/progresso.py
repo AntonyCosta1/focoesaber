@@ -17,14 +17,15 @@ def consultar_progresso_aluno(
     id_aluno: int,
     db: Session = Depends(get_db),
     usuario_atual: User = Depends(get_current_user)
-    ):
-    if usuario_atual.tipo_usuario == "responsavel":
-        if aluno.id_responsavel != usuario_atual.id_usuario:
-            raise HTTPException(status_code=403, detail="Acesso negado")
-        
+):
+    # CORRIGIDO: buscar o aluno ANTES de verificar o responsável
     aluno = db.query(Aluno).filter(Aluno.id_aluno == id_aluno).first()
     if not aluno:
         raise HTTPException(status_code=404, detail="Aluno não encontrado")
+
+    if usuario_atual.tipo_usuario == "responsavel":
+        if aluno.id_responsavel != usuario_atual.id_usuario:
+            raise HTTPException(status_code=403, detail="Acesso negado")
 
     inscricao = db.query(Inscricao).filter(Inscricao.id_aluno == id_aluno).first()
     if not inscricao:

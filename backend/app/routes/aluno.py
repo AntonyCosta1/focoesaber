@@ -15,7 +15,8 @@ def criar_aluno(
     db: Session = Depends(get_db),
     usuario_atual: User = Depends(exigir_perfil("admin", "professor"))
 ):
-    if usuario_atual.tipo_usuario != "professor" | "admin":
+    # CORRIGIDO: era `"professor" | "admin"` (bitwise) — sempre avaliava errado
+    if usuario_atual.tipo_usuario not in ("professor", "admin"):
         raise HTTPException(status_code=403, detail="Apenas administradores e professores podem criar alunos")
     
     responsavel = db.query(User).filter(User.id_usuario == data.id_responsavel).first()
@@ -27,11 +28,11 @@ def criar_aluno(
         raise HTTPException(status_code=404, detail="Escola não encontrada")
 
     aluno = Aluno(
-        nome = data.nome,
-        data_nascimento = data.data_nascimento,
-        matricula = data.matricula,
-        id_escola = data.id_escola,
-        id_responsavel = data.id_responsavel
+        nome=data.nome,
+        data_nascimento=data.data_nascimento,
+        matricula=data.matricula,
+        id_escola=data.id_escola,
+        id_responsavel=data.id_responsavel
     )
 
     db.add(aluno)
@@ -59,6 +60,7 @@ def buscar_aluno_por_nome(
 
     if not alunos:
         raise HTTPException(status_code=404, detail="Nenhum aluno encontrado")
+
     if usuario_atual.tipo_usuario == "responsavel":
         alunos = [aluno for aluno in alunos if aluno.id_responsavel == usuario_atual.id_usuario]
         if not alunos:
