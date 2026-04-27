@@ -23,7 +23,7 @@ def get_current_user(
     except JWTError:
         raise HTTPException(status_code=401, detail="Token inválido")
     
-    user = db.query(User).filter(User.id == id_usuario).first()
+    user = db.query(User).filter(User.id_usuario == id_usuario).first()
 
     if not user:
         raise HTTPException(status_code=401, detail="Usuário não encontrado")
