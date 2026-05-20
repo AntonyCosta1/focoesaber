@@ -5,9 +5,16 @@ import os
 
 load_dotenv()
 
-DATABASE_URL = "postgresql://focoesaber_user:If34DUtu4sLI2xOHrdSNPk3j22V1T5B1@dpg-d7duuvhf9bms738dhc70-a.oregon-postgres.render.com/focoesaber"
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./focoesaber.db")
 
-engine = create_engine(DATABASE_URL)
+# Se usar SQLite, adiciona parâmetro para suportar check_same_thread
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(
+        DATABASE_URL, 
+        connect_args={"check_same_thread": False}
+    )
+else:
+    engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, CheckCircle2, XCircle } from "lucide-react";
+import { API_URL } from "@/lib/api";
 
 type Indicacao = {
   id_indicacao: number;
@@ -37,8 +38,6 @@ export default function IndicacoesPage() {
   const [inscricoes, setInscricoes] = useState<Inscricao[]>([]);
 
   const router = useRouter();
-
-  const API_URL = "https://focoesaber.onrender.com";
 
   function getHeaders() {
     const token = localStorage.getItem("token");

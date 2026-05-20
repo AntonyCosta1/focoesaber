@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, ClipboardPlus } from "lucide-react";
+import { API_URL } from "@/lib/api";
 
 type Aluno = {
   id_aluno: number;
@@ -14,8 +15,6 @@ type Usuario = {
   nome: string;
   tipo_usuario: string;
 };
-
-const API_URL = "https://focoesaber.onrender.com";
 
 export default function NovaIndicacaoPage() {
   const router = useRouter();

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, UserPlus } from "lucide-react";
+import { API_URL } from "@/lib/api";
 
 type Escola = {
   id_escola: number;
@@ -28,7 +29,7 @@ export default function NovoAlunoPage() {
   const [responsaveis, setResponsaveis] = useState<Usuario[]>([]);
   const [buscaResponsavel, setBuscaResponsavel] = useState("");
   const [loading, setLoading] = useState(false);
-  const [buscandoResponsavel, setBuscandoResponsavel] = useState(false);
+  const [mostrandoResponsaveis, setMostrandoResponsaveis] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -40,7 +41,12 @@ export default function NovoAlunoPage() {
 
     async function carregarDados() {
       try {
-        const resEscolas = await fetch("https://focoesaber.onrender.com/escolas/");
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
+
+        // Carrega escolas
+        const resEscolas = await fetch(`${API_URL}/escolas/`);
 
         if (!resEscolas.ok) {
           throw new Error("Erro ao carregar escolas");
@@ -48,6 +54,19 @@ export default function NovoAlunoPage() {
 
         const dataEscolas = await resEscolas.json();
         setEscolas(dataEscolas);
+
+        // Carrega todos os responsáveis
+        const resResponsaveis = await fetch(`${API_URL}/usuarios/`, {
+          headers,
+        });
+
+        if (resResponsaveis.ok) {
+          const dataResponsaveis = await resResponsaveis.json();
+          const responsaveisFiltrados = dataResponsaveis.filter(
+            (usuario: Usuario) => usuario.tipo_usuario === "responsavel"
+          );
+          setResponsaveis(responsaveisFiltrados);
+        }
       } catch (error) {
         console.error("Erro ao carregar dados do formulário:", error);
       }
@@ -58,32 +77,47 @@ export default function NovoAlunoPage() {
 
   async function buscarResponsavelPorNome(nomeBusca: string) {
     if (!nomeBusca.trim()) {
-      setResponsaveis([]);
+      setMostrandoResponsaveis(true);
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const res = await fetch(`${API_URL}/usuarios/`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const resp = data.filter(
+              (u: Usuario) => u.tipo_usuario === "responsavel"
+            );
+            setResponsaveis(resp);
+          }
+        } catch (error) {
+          console.error("Erro ao carregar responsáveis:", error);
+        }
+      }
       return;
     }
 
-    setBuscandoResponsavel(true);
-
-    try {
-      const response = await fetch(
-        `https://focoesaber.onrender.com/usuarios/buscar/${encodeURIComponent(nomeBusca)}`
-      );
-
-      if (!response.ok) {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const res = await fetch(`${API_URL}/usuarios/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const resp = data.filter(
+            (u: Usuario) =>
+              u.tipo_usuario === "responsavel" &&
+              u.nome.toLowerCase().includes(nomeBusca.toLowerCase())
+          );
+          setResponsaveis(resp);
+          setMostrandoResponsaveis(true);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar responsável:", error);
         setResponsaveis([]);
-        return;
       }
-
-      const data = await response.json();
-
-      setResponsaveis(
-        data.filter((usuario: Usuario) => usuario.tipo_usuario === "responsavel")
-      );
-    } catch (error) {
-      console.error("Erro ao buscar responsável:", error);
-      setResponsaveis([]);
-    } finally {
-      setBuscandoResponsavel(false);
     }
   }
 
@@ -104,7 +138,7 @@ export default function NovoAlunoPage() {
         return;
       }
 
-      const response = await fetch("https://focoesaber.onrender.com/alunos/", {
+      const response = await fetch(`${API_URL}/alunos/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -235,42 +269,54 @@ export default function NovoAlunoPage() {
                   setIdResponsavel("");
                   buscarResponsavelPorNome(valor);
                 }}
+                onFocus={() => {
+                  setMostrandoResponsaveis(true);
+                  setBuscaResponsavel("");
+                  const token = localStorage.getItem("token");
+                  if (token) {
+                    fetch(`${API_URL}/usuarios/`, {
+                      headers: { Authorization: `Bearer ${token}` },
+                    })
+                      .then((res) => res.json())
+                      .then((data) => {
+                        const resp = data.filter(
+                          (u: Usuario) => u.tipo_usuario === "responsavel"
+                        );
+                        setResponsaveis(resp);
+                      })
+                      .catch((error) =>
+                        console.error("Erro ao carregar responsáveis:", error)
+                      );
+                  }
+                }}
                 placeholder="Digite o nome do responsável"
                 className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-green-500"
               />
 
-              {buscandoResponsavel && (
-                <p className="mt-2 text-sm text-slate-500">Buscando responsável...</p>
+              {mostrandoResponsaveis && responsaveis.length > 0 && (
+                <div className="absolute z-10 mt-2 max-h-48 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg">
+                  {responsaveis.map((responsavel) => (
+                    <button
+                      type="button"
+                      key={responsavel.id_usuario}
+                      onClick={() => {
+                        setIdResponsavel(String(responsavel.id_usuario));
+                        setBuscaResponsavel(responsavel.nome);
+                        setMostrandoResponsaveis(false);
+                      }}
+                      className="block w-full px-4 py-3 text-left hover:bg-slate-100"
+                    >
+                      {responsavel.nome}
+                    </button>
+                  ))}
+                </div>
               )}
 
-              {!buscandoResponsavel &&
-                buscaResponsavel.trim() !== "" &&
-                responsaveis.length > 0 && (
-                  <div className="absolute z-10 mt-2 max-h-48 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg">
-                    {responsaveis.map((responsavel) => (
-                      <button
-                        type="button"
-                        key={responsavel.id_usuario}
-                        onClick={() => {
-                          setIdResponsavel(String(responsavel.id_usuario));
-                          setBuscaResponsavel(responsavel.nome);
-                          setResponsaveis([]);
-                        }}
-                        className="block w-full px-4 py-3 text-left hover:bg-slate-100"
-                      >
-                        {responsavel.nome}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-              {!buscandoResponsavel &&
-                buscaResponsavel.trim() !== "" &&
-                responsaveis.length === 0 && (
-                  <p className="mt-2 text-sm text-red-500">
-                    Nenhum responsável encontrado.
-                  </p>
-                )}
+              {mostrandoResponsaveis && responsaveis.length === 0 && (
+                <p className="mt-2 text-sm text-red-500">
+                  Nenhum responsável encontrado.
+                </p>
+              )}
 
               {idResponsavel && (
                 <p className="mt-2 text-sm text-green-600">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Search, Trash2 } from "lucide-react";
+import { API_URL } from "@/lib/api";
 
 type Atividade = {
   id_atividade: number;
@@ -15,8 +16,6 @@ type Escola = {
   id_escola: number;
   nome: string;
 };
-
-const API_URL = "https://focoesaber.onrender.com";
 
 export default function AtividadesPage() {
   const router = useRouter();

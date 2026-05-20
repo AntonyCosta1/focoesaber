@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, Lock, Mail } from "lucide-react";
+import { API_URL } from "@/lib/api";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -18,7 +19,7 @@ export default function LoginPage() {
     formData.append("password", senha);
 
     const response = await fetch(
-      "https://focoesaber.onrender.com/login/login",
+      `${API_URL}/login/login`,
       {
         method: "POST",
         headers: {

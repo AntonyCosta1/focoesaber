@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Search, Users } from "lucide-react";
-
+import { ArrowLeft, Plus, Search, Users } from "lucide-react";import { API_URL } from "@/lib/api";
 type Usuario = {
   id_usuario: number;
   nome: string;
@@ -39,7 +38,7 @@ export default function AlunosPage() {
 
     async function carregarDados() {
       try {
-        const resMe = await fetch("https://focoesaber.onrender.com/usuarios/me", {
+        const resMe = await fetch(`${API_URL}/usuarios/me`, {
           headers,
         });
 
@@ -51,7 +50,7 @@ export default function AlunosPage() {
 
         const usuarioLogado = await resMe.json();
 
-        const resAlunos = await fetch("https://focoesaber.onrender.com/alunos/", {
+        const resAlunos = await fetch(`${API_URL}/alunos/`, {
           headers,
         });
 
@@ -65,7 +64,7 @@ export default function AlunosPage() {
 
         if (usuarioLogado.tipo_usuario === "admin") {
           const resUsuarios = await fetch(
-            "https://focoesaber.onrender.com/usuarios/",
+            `${API_URL}/usuarios/`,
             { headers }
           );
 

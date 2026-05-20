@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Search, GraduationCap } from "lucide-react";
+import { API_URL } from "@/lib/api";
 
 type Usuario = {
     id_usuario: number;
@@ -11,8 +12,6 @@ type Usuario = {
     telefone?: string;
     tipo_usuario: string;
 };
-
-const API_URL = "https://focoesaber.onrender.com";
 
 export default function ProfessoresPage() {
     const router = useRouter();

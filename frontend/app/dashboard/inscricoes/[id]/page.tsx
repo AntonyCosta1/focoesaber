@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Save, ClipboardCheck } from "lucide-react";
+import { API_URL } from "@/lib/api";
 
 type Atividade = {
     id_atividade: number;
@@ -30,7 +31,7 @@ export default function finalizarInscricaoPage() {
 
         async function carregarAtividades() {
             try {
-                const response = await fetch("https://focoesaber.onrender.com/atividades/");
+                const response = await fetch(`${API_URL}/atividades/`);
                 const data = await response.json();
                 setAtividades(data);
             } catch (error) {
@@ -52,7 +53,7 @@ export default function finalizarInscricaoPage() {
         setLoading(true);
 
         try {
-            const response = await fetch("https://focoesaber.onrender.com/inscricoes/", {
+            const response = await fetch(`${API_URL}/inscricoes/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

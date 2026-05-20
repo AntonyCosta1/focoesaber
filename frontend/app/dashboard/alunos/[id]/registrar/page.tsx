@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Save } from "lucide-react";
+import { API_URL } from "@/lib/api";
 
 type ProgressoAluno = {
     aluno: {
@@ -56,8 +57,8 @@ export default function RegistrarProgressoPage() {
         async function carregarDados() {
             try {
                 const [resProgresso, resUsers] = await Promise.all([
-                    fetch(`https://focoesaber.onrender.com/progresso/aluno/${idAluno}`),
-                    fetch("https://focoesaber.onrender.com/usuarios/"),
+                    fetch(`${API_URL}/progresso/aluno/${idAluno}`),
+                    fetch(`${API_URL}/usuarios/`),
                 ]);
 
                 const dataProgresso = await resProgresso.json();
@@ -100,7 +101,7 @@ export default function RegistrarProgressoPage() {
         setSalvandoFrequencia(true);
 
         try {
-            const response = await fetch("https://focoesaber.onrender.com/frequencias/", {
+            const response = await fetch(`${API_URL}/frequencias/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -148,7 +149,7 @@ export default function RegistrarProgressoPage() {
         setSalvandoDesempenho(true);
 
         try {
-            const response = await fetch("https://focoesaber.onrender.com/desempenhos/", {
+            const response = await fetch(`${API_URL}/desempenhos/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

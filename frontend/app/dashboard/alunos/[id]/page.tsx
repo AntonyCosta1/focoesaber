@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, User, ClipboardList, TrendingUp } from "lucide-react";
 import { cp } from "fs";
+import { API_URL } from "@/lib/api";
 
 type ProgressoAluno = {
     aluno: {
@@ -51,7 +52,7 @@ export default function ProgressoAlunoPage() {
 
         async function carregarProgresso() {
             try {
-                const response = await fetch(`https://focoesaber.onrender.com/progresso/aluno/${idAluno}`);
+                const response = await fetch(`${API_URL}/progresso/aluno/${idAluno}`);
                 const data = await response.json();
 
                 if (!response.ok) {

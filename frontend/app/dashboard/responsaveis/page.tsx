@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Search, Users } from "lucide-react";
+import { API_URL } from "@/lib/api";
 
 type Usuario = {
     id_usuario: number;
@@ -34,7 +35,7 @@ export default function ResponsaveisPage() {
         async function carregarResponsaveis() {
             try {
                 // Carregar usuário atual
-                const resMe = await fetch("https://focoesaber.onrender.com/usuarios/me", { headers });
+                const resMe = await fetch(`${API_URL}/usuarios/me`, { headers });
 
                 if (!resMe.ok) {
                     localStorage.removeItem("token");
@@ -46,7 +47,7 @@ export default function ResponsaveisPage() {
                 setUsuarioAtual(usuario);
 
                 // Carregar responsáveis
-                const response = await fetch("https://focoesaber.onrender.com/usuarios/", { headers });
+                const response = await fetch(`${API_URL}/usuarios/`, { headers });
                 const data = await response.json();
 
                 const filtrados = data.filter(

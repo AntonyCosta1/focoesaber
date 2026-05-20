@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, AlertTriangle, BarChart3, Search } from "lucide-react";
+import { API_URL } from "@/lib/api";
 
 type RelatorioFrequencia = {
   total_aulas: number;
@@ -28,8 +29,6 @@ type AlunoBusca = {
   nome: string;
   matricula: string;
 };
-
-const API_URL = "https://focoesaber.onrender.com";
 
 export default function RelatoriosPage() {
   const router = useRouter();

@@ -15,8 +15,7 @@ import {
   BarChart3,
   GraduationCap,
 } from "lucide-react";
-
-const API_URL = "https://focoesaber.onrender.com";
+import { API_URL } from "@/lib/api";
 
 type Usuario = {
   id_usuario: number;
